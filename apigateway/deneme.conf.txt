@@ -1,0 +1,5 @@
+
+exten => ${ivrKodu},1,NoOp(Mesai saatleri içinde)
+
+
+https://www.youtube.com/watch?v=05uSC6yUIrw
