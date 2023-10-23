@@ -2,16 +2,11 @@
 
 import { Container } from 'inversify';
 import { MongoDBConnector } from './db';
-import { UserRepository } from '../domain/Users/UserRepository';
-import { UserService } from '../domain/Users/UserService';
-import { UserController } from '../controller/UserController';
-import { UserApplicationService } from '../appservices/UserApplicationService'
-import  PasswordService  from '../infrastructure/PasswordService';
-import { Product } from '../domain/Users/Product/Product';
-import { ProductRepository } from '../domain/Users/Product/ProductRepository';
-import { ProductService } from '../domain/Users/Product/ProductService';
-import { ProductController } from '../controller/ProductController';
-import { ProductApplicationService } from '../appservices/ProductApplicationService';
+import { UserRepository } from '../Login/domain/Users/UserRepository';
+import { UserService } from '../Login/domain/Users/UserService';
+import { UserController } from '../Login/controller/UserController';
+import { UserApplicationService } from '../Login/appservices/UserApplicationService'
+import  PasswordService  from './PasswordService';
 
 const configureContainer = (container: Container) => {
 container.bind<MongoDBConnector>(MongoDBConnector).to(MongoDBConnector);
@@ -20,11 +15,6 @@ container.bind<UserApplicationService>(UserApplicationService).to(UserApplicatio
 container.bind<UserService>(UserService).to(UserService);
 container.bind<UserController>(UserController).to(UserController);
 container.bind<PasswordService>(PasswordService).to(PasswordService);
-container.bind<Product>(Product).to(Product);
-container.bind<ProductRepository>(ProductRepository).to(ProductRepository);
-container.bind<ProductService>(ProductService).to(ProductService);
-container.bind<ProductController>(ProductController).to(ProductController);
-container.bind<ProductApplicationService>(ProductApplicationService).to(ProductApplicationService);
 };
 
 export default configureContainer;

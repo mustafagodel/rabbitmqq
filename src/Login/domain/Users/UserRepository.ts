@@ -1,8 +1,9 @@
 import { Collection } from 'mongodb';
 import { inject, injectable } from 'inversify';
 import { User } from './User';
-import { MongoDBConnector } from '../../infrastructure/db';
-import  PasswordService  from '../../infrastructure/PasswordService';
+import { MongoDBConnector } from '../../../infrastructure/db';
+import  { PasswordService } from '../../../infrastructure/PasswordService';
+
 
 @injectable()
 export class UserRepository {

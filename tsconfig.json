@@ -12,7 +12,7 @@
     "declaration": false, 
     "moduleResolution": "node",
     "jsx": "react", 
-    "rootDir": "./src", 
+    "rootDir": "./", 
     "baseUrl": "./", 
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
@@ -22,6 +22,6 @@
     "typeRoots": ["node_modules/@types"],
     "sourceMap": true
   },
-  "include": ["src/*.ts"], 
+  "include": ["src/*.ts", "src/app.ts","src/Product/app.ts"], 
   "exclude": ["node_modules"]
 }

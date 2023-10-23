@@ -1,7 +1,7 @@
 import { inject, injectable } from 'inversify';
 import { UserRepository } from './UserRepository';
 import { User } from './User';
-import  { PasswordService } from '../../infrastructure/PasswordService';
+import  { PasswordService } from '../../../infrastructure/PasswordService';
 
 @injectable()
 export class UserService {

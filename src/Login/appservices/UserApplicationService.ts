@@ -1,8 +1,8 @@
 import { inject, injectable } from 'inversify';
 import { UserService } from '../domain/Users/UserService';
 import jwt from 'jsonwebtoken';
-import {ApiResponse} from '../infrastructure/ApiResponse';
-import  PasswordService  from '../infrastructure/PasswordService';
+import {ApiResponse} from '../../infrastructure/ApiResponse';
+
 
 
 require('dotenv').config();
