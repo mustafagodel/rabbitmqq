@@ -2,11 +2,11 @@ import express from 'express';
 import 'reflect-metadata';
 import bodyParser from 'body-parser';
 import { Container } from 'inversify';
-import configureContainer from './infrastructure/inversify.config';
-import { UserController } from './controller/UserController';
-import Middleware from './middleware/ExecptionMiddleware';
-import { UserApplicationService } from './appservices/UserApplicationService';
-import PasswordService from './infrastructure/PasswordService';
+import configureContainer from '../Login/src/infrastructure/inversify.config';
+import { UserController } from '../Login/src/controller/UserController';
+import Middleware from '../Login/src/middleware/ExecptionMiddleware';
+import { UserApplicationService } from '../Login/src/appservices/UserApplicationService';
+import PasswordService from '../Login/src/infrastructure/PasswordService';
 import amqp from 'amqplib/callback_api'; 
 
 require('dotenv').config();
