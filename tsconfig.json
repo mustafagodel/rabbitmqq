@@ -1,0 +1,27 @@
+
+{
+  "compilerOptions": {
+    "target": "ES2020", 
+    "module": "CommonJS", 
+    "outDir": "./dist", 
+    "strict": true,
+    "esModuleInterop": true, 
+    "types": [],
+    "skipLibCheck": true, 
+    "forceConsistentCasingInFileNames": true, 
+    "declaration": false, 
+    "moduleResolution": "node",
+    "jsx": "react", 
+    "rootDir": "./src", 
+    "baseUrl": "./", 
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "paths": {
+      
+    },
+    "typeRoots": ["node_modules/@types"],
+    "sourceMap": true
+  },
+  "include": ["src/*.ts"], 
+  "exclude": ["node_modules"]
+}
