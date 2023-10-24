@@ -1,8 +1,8 @@
 import { Request, Response, Router } from 'express';
-import { ProductService } from '../domain/Users/Product/ProductService';
+import { ProductService } from '../../Product/domain/Product/ProductService';
 import { inject, injectable } from 'inversify';
 import express from 'express';
-import { ApiResponse } from '../infrastructure/ApiResponse';
+import { ApiResponse } from '../../infrastructure/ApiResponse';
 import { ProductApplicationService } from '../appservices/ProductApplicationService';
 
 @injectable()

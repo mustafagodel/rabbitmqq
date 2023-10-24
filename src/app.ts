@@ -3,7 +3,7 @@ import 'reflect-metadata';
 import bodyParser from 'body-parser';
 import { Container } from 'inversify';
 import configureContainer from './infrastructure/inversify.config';
-import { UserController } from './Login/controller/UserController';
+import { UserController } from './Login/controller/app.js';
 import Middleware from './middleware/ExecptionMiddleware';
 import PasswordService from './infrastructure/PasswordService';
 import { RabbitMQService } from './infrastructure/RabbitMQService'; // Yeni ekledik

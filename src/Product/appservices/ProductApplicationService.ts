@@ -1,6 +1,6 @@
 import { injectable } from 'inversify';
-import { ProductService } from '../domain/Users/Product/ProductService';
-import { ApiResponse } from '../infrastructure/ApiResponse';
+import { ProductService } from '../../Product/domain/Product/ProductService';
+import { ApiResponse } from '../../infrastructure/ApiResponse';
 
 @injectable()
 export class ProductApplicationService {

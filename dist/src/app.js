@@ -8,7 +8,7 @@ require("reflect-metadata");
 const body_parser_1 = __importDefault(require("body-parser"));
 const inversify_1 = require("inversify");
 const inversify_config_1 = __importDefault(require("./infrastructure/inversify.config"));
-const UserController_1 = require("./Login/controller/UserController");
+const app_js_1 = require("./Login/controller/app.js");
 const ExecptionMiddleware_1 = __importDefault(require("./middleware/ExecptionMiddleware"));
 const RabbitMQService_1 = require("./infrastructure/RabbitMQService"); // Yeni ekledik
 require('dotenv').config();
@@ -20,7 +20,7 @@ app.use(ExecptionMiddleware_1.default);
 app.use(body_parser_1.default.json());
 app.use(body_parser_1.default.urlencoded({ extended: true }));
 app.use(express_1.default.static('dist'));
-const userController = container.get(UserController_1.UserController);
+const userController = container.get(app_js_1.UserController);
 const rabbitmqService = new RabbitMQService_1.RabbitMQService('amqp://localhost', 'Queue'); // RabbitMQ servisi
 rabbitmqService.onMessageReceived((message) => {
     userController.handleMessage1(message);
