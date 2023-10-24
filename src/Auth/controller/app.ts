@@ -15,7 +15,7 @@ import { RabbitMQService } from '../../infrastructure/RabbitMQService';
 export class UserController {
     private readonly rabbitmqService: RabbitMQService;
   constructor(@inject(UserService) private userService: UserService, @inject(PasswordService) passwordService: PasswordService,@inject(UserApplicationService) private userAppService: UserApplicationService) {
-        this.rabbitmqService = new RabbitMQService(  'amqp://localhost',  'Queue');
+        this.rabbitmqService1 = new RabbitMQService(  'amqp://localhost',  'Queue');
         this.setupRabbitMQ(); 
     }
 

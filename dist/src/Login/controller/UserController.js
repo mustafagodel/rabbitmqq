@@ -12,27 +12,23 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UserApplicationService = exports.UserController = void 0;
+exports.UserController = void 0;
 const UserService_1 = require("../domain/Users/UserService");
 const inversify_1 = require("inversify");
 require("reflect-metadata");
 const UserApplicationService_1 = require("../appservices/UserApplicationService");
-Object.defineProperty(exports, "UserApplicationService", { enumerable: true, get: function () { return UserApplicationService_1.UserApplicationService; } });
 const PasswordService_1 = require("../../infrastructure/PasswordService");
 const RabbitMQService_1 = require("../../infrastructure/RabbitMQService");
 let UserController = class UserController {
-    constructor(userService, passwordService, userAppService) {
+    constructor(userService, passwordService) {
         this.userService = userService;
-        this.userAppService = userAppService;
+        this.userAppService = new UserApplicationService_1.UserApplicationService(userService);
         this.rabbitmqService = new RabbitMQService_1.RabbitMQService('amqp://localhost', 'Queue');
-        this.setupRabbitMQ();
-    }
-    setupRabbitMQ() {
         this.rabbitmqService.onMessageReceived((message) => {
-            this.handleMessage(message);
+            this.handleMessage1(message);
         });
     }
-    async handleMessage(message) {
+    async handleMessage1(message) {
         const messageData = JSON.parse(message);
         if (messageData.action === 'login') {
             const response = await this.userAppService.loginUser(messageData.username, messageData.password);
@@ -49,7 +45,6 @@ exports.UserController = UserController = __decorate([
     (0, inversify_1.injectable)(),
     __param(0, (0, inversify_1.inject)(UserService_1.UserService)),
     __param(1, (0, inversify_1.inject)(PasswordService_1.PasswordService)),
-    __param(2, (0, inversify_1.inject)(UserApplicationService_1.UserApplicationService)),
-    __metadata("design:paramtypes", [UserService_1.UserService, PasswordService_1.PasswordService, UserApplicationService_1.UserApplicationService])
+    __metadata("design:paramtypes", [UserService_1.UserService, PasswordService_1.PasswordService])
 ], UserController);
-//# sourceMappingURL=app.js.map
+//# sourceMappingURL=UserController.js.map

@@ -3,10 +3,10 @@ import 'reflect-metadata';
 import bodyParser from 'body-parser';
 import { Container } from 'inversify';
 import configureContainer from './infrastructure/inversify.config';
-import { UserController } from './Auth/controller/app';
+import { UserController } from './Login/controller/UserController';
 import Middleware from './middleware/ExecptionMiddleware';
 import PasswordService from './infrastructure/PasswordService';
-import { RabbitMQService } from './infrastructure/RabbitMQService'; 
+import { RabbitMQService } from './infrastructure/RabbitMQService'; // Yeni ekledik
 
 require('dotenv').config();
 
@@ -20,39 +20,29 @@ app.use(Middleware);
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-
+app.use(express.static('dist'));
 const userController = container.get<UserController>(UserController);
-const rabbitmqServiceQueue = new RabbitMQService('amqp://localhost','Queue' );
-const rabbitmqServiceQueue1 = new RabbitMQService('amqp://localhost','Queue1' );
-const rabbitmqServiceQueue2 = new RabbitMQService('amqp://localhost','Queue2' );
 
-app.post('/api', (req, res) => {
+const rabbitmqService = new RabbitMQService('amqp://localhost', 'Queue'); // RabbitMQ servisi
+rabbitmqService.onMessageReceived((message: string) => {
+  userController.handleMessage1(message);
+});
+app.post('/other', (req, res) => {
   const requestData = req.body;
-  const messageText = JSON.stringify(requestData);
-  rabbitmqServiceQueue.sendMessage(messageText, (error) => {
+  const messageText = JSON.stringify(requestData); // JSON verisini dizeye dönüştür
+
+  // RabbitMQ servisine isteği gönder
+  rabbitmqService.sendMessage(messageText, (error: any) => {
     if (error) {
-      console.error('RabbitMQ bağlantı veya gönderme hatası (Queue):', error);
-      res.status(500).send('RabbitMQ hatası (Queue)');
+      console.error('RabbitMQ bağlantı veya gönderme hatası:', error);
+      res.status(500).send('RabbitMQ hatası');
     } else {
-      res.send('İstek alındı ve RabbitMQ\'ya (Queue) iletiliyor.');
+      res.send('İstek alındı ve RabbitMQ\'ya iletiliyor.');
     }
   });
 });
 
-app.post('/api/queu1', (req, res) => {
-  const requestData = req.body;
-  const messageText = JSON.stringify(requestData);
-  rabbitmqServiceQueue1.sendMessage(messageText, (error) => {
-    if (error) {
-      console.error('RabbitMQ bağlantı veya gönderme hatası (Queue1):', error);
-      res.status(500).send('RabbitMQ hatası (Queue1)');
-    } else {
-      res.send('İstek alındı ve RabbitMQ\'ya (Queue1) iletiliyor.');
-    }
-  });
-});
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
-

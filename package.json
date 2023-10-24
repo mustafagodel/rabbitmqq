@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "app.ts",
   "scripts": {
+    "postinstall": "rm -rf dist",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
@@ -29,4 +30,5 @@
     "@types/node": "^20.8.7",
     "typescript": "^5.2.2"
   }
+  
 }
