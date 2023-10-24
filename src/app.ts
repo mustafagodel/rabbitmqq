@@ -28,7 +28,8 @@ const rabbitmqServiceQueue2 = new RabbitMQService('amqp://localhost','Queue2' );
 
 app.post('/api', (req, res) => {
   const requestData = req.body;
-  rabbitmqServiceQueue.sendMessage(requestData, (error) => {
+  const messageText = JSON.stringify(requestData);
+  rabbitmqServiceQueue.sendMessage(messageText, (error) => {
     if (error) {
       console.error('RabbitMQ bağlantı veya gönderme hatası (Queue):', error);
       res.status(500).send('RabbitMQ hatası (Queue)');
@@ -39,8 +40,9 @@ app.post('/api', (req, res) => {
 });
 
 app.post('/api/queu1', (req, res) => {
-  const requestData1 = req.body;
-  rabbitmqServiceQueue1.sendMessage(requestData1, (error) => {
+  const requestData = req.body;
+  const messageText = JSON.stringify(requestData);
+  rabbitmqServiceQueue1.sendMessage(messageText, (error) => {
     if (error) {
       console.error('RabbitMQ bağlantı veya gönderme hatası (Queue1):', error);
       res.status(500).send('RabbitMQ hatası (Queue1)');

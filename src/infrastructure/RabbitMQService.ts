@@ -1,23 +1,24 @@
-import amqp from 'amqplib/callback_api';
+import amqplib from 'amqplib/callback_api';
 
 export class RabbitMQService {
-    onMessageReceived(arg0: (message: string) => void) {
-        throw new Error('Method not implemented.');
-    }
- 
-    private connection: amqp.Connection | undefined;
-    private channel: amqp.Channel | undefined;
+    private connection: amqplib.Connection | undefined;
+    private channel: amqplib.Channel | undefined;
     private queueName: string;
+    private messageHandler: (message: string) => void; // Mesajları işleyecek olan callback
 
     constructor(rabbitmqServer: string, queueName: string) {
         this.queueName = queueName;
-        amqp.connect(rabbitmqServer, (error, connection) => {
+        this.messageHandler = (_message: string) => {}; // Boş bir callback ile başlayın
+
+        amqplib.connect(rabbitmqServer, (error, connection) => {
             if (error) {
                 console.error('RabbitMQ bağlantı hatası:', error);
                 return;
             }
 
-            connection.createChannel((error, channel) => {
+            this.connection = connection;
+
+            this.connection.createChannel((error, channel) => {
                 if (error) {
                     console.error('RabbitMQ kanalı oluşturma hatası:', error);
                     connection.close();
@@ -27,17 +28,48 @@ export class RabbitMQService {
                 this.channel = channel;
                 this.channel.assertQueue(this.queueName, { durable: false });
                 console.log(`Listening for messages in ${this.queueName}...`);
+
+                // Mesajları tüketmeye başla
+                this.startConsumingMessages();
             });
         });
     }
-  
+
+    // Dışarıdan mesajları işleyecek bir callback'i kaydetmek için kullanılır
+    public onMessageReceived(callback: (message: string) => void) {
+        this.messageHandler = callback;
+    }
+
+    private startConsumingMessages() {
+        if (!this.channel) {
+            console.error('Kanal oluşturulmamış.');
+            return;
+        }
+
+        this.channel.consume(this.queueName, (message) => {
+            if (message) {
+                const content = message.content.toString();
+
+                // Mesaj işlemesini başlat
+                this.messageHandler(content);
+
+                // Mesaj işlendikten sonra, RabbitMQ'ya yanıt vermelisiniz.
+                this.channel?.ack(message);
+            }
+        });
+    }
+
     public sendMessage(message: string, callback: (error: any) => void) {
-        this.channel?.sendToQueue(this.queueName, Buffer.from(message));
+        if (!this.channel) {
+            console.error('Kanal oluşturulmamış.');
+            callback('Kanal oluşturulmamış hatası');
+            return;
+        }
+
+        this.channel.sendToQueue(this.queueName, Buffer.from(message));
         console.log('RabbitMQ\'ya istek gönderildi:', message);
-    
+
         // İşlem tamamlandığında callback'i çağır
         callback(null); // Herhangi bir hata olmadığını belirtmek için null
     }
-
-    // Diğer RabbitMQ ile ilgili işlemler burada olabilir.
 }
