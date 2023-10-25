@@ -16,7 +16,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ProductController = void 0;
-const ProductService_1 = require("../../Product/domain/Product/ProductService");
+const ProductService_1 = require("../domain/Product/ProductService");
 const inversify_1 = require("inversify");
 const express_1 = __importDefault(require("express"));
 const ProductApplicationService_1 = require("../appservices/ProductApplicationService");

@@ -14,21 +14,26 @@ import { RabbitMQService } from '../../infrastructure/RabbitMQService';
 @injectable()
 export class UserController {
     private readonly userAppService: UserApplicationService;
-    private readonly rabbitmqService: RabbitMQService;
 
-    constructor(@inject(UserService) private userService: UserService, @inject(PasswordService) passwordService: PasswordService) {
+
+    constructor(
+        @inject(UserService) private userService: UserService,
+        @inject(PasswordService) passwordService: PasswordService,
+        @inject('RabbitMQServiceQueue1') private rabbitmqService1: RabbitMQService
+    ) {
         this.userAppService = new UserApplicationService(userService);
-        this.rabbitmqService = new RabbitMQService('amqp://localhost', 'Queue');
-        this.rabbitmqService.onMessageReceived((message: string) => {
+
+
+        this.rabbitmqService1.onMessageReceived((message: string) => {
             this.handleMessage1(message);
         });
     }
 
 
 
-
     public async handleMessage1(message: string) {
         const messageData = JSON.parse(message);
+
         if (messageData.action === 'login') {
             const response = await this.userAppService.loginUser(messageData.username, messageData.password);
             console.log('Login response:', response);

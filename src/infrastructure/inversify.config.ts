@@ -2,16 +2,17 @@
 
 import { Container } from 'inversify';
 import { MongoDBConnector } from './db';
-import { UserRepository } from '../Login/domain/Users/UserRepository';
-import { UserService } from '../Login/domain/Users/UserService';
-import { UserController } from '../Login/controller/app.js';
-import { UserApplicationService } from '../Login/appservices/UserApplicationService';
+import { UserRepository } from '../Auth/domain/Users/UserRepository';
+import { UserService } from '../Auth/domain/Users/UserService';
+import { UserController } from '../Auth/app/app.js';
+import { UserApplicationService } from '../Auth/appservices/UserApplicationService';
 import  PasswordService  from './PasswordService';
-import { ProductApplicationService } from '../Product/appservices/ProductApplicationService'
-import { ProductController } from '../Product/controller/app'
-import { Product } from '../Product/domain/Product/Product'
-import { ProductRepository } from '../Product/domain/Product/ProductRepository'
-import { ProductService } from '../Product/domain/Product/ProductService'
+import { ProductApplicationService } from '../Product/appservices/ProductApplicationService';
+import { ProductController } from '../Product/app/app';
+import { Product } from '../Product/domain/Product/Product';
+import { ProductRepository } from '../Product/domain/Product/ProductRepository';
+import { ProductService } from '../Product/domain/Product/ProductService';
+import { RabbitMQService } from '../../src/infrastructure/RabbitMQService'; 
 
 const configureContainer = (container: Container) => {
 container.bind<MongoDBConnector>(MongoDBConnector).to(MongoDBConnector);
@@ -25,6 +26,13 @@ container.bind<ProductController>(ProductController).to(ProductController);
 container.bind<Product>(Product).to(Product);
 container.bind<ProductRepository>(ProductRepository).to(ProductRepository);
 container.bind<ProductService>(ProductService).to(ProductService);
+container.bind<RabbitMQService>('RabbitMQServiceQueue1').toDynamicValue(() => {
+    return new RabbitMQService('amqp://localhost', 'Queue1');
+  });
+  
+  container.bind<RabbitMQService>('RabbitMQServiceQueue2').toDynamicValue(() => {
+    return new RabbitMQService('amqp://localhost', 'Queue2');
+  });
 
 };
 

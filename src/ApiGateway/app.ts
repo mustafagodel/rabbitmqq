@@ -2,12 +2,12 @@ import express from 'express';
 import 'reflect-metadata';
 import bodyParser from 'body-parser';
 import { Container } from 'inversify';
-import configureContainer from './infrastructure/inversify.config';
-import { UserController } from './Login/controller/app.js';
-import Middleware from './middleware/ExecptionMiddleware';
-import PasswordService from './infrastructure/PasswordService';
-import { RabbitMQService } from './infrastructure/RabbitMQService'; 
-import { ProductController } from '../src/Product/controller/app';
+import configureContainer from '../infrastructure/inversify.config';
+import { UserController } from '../Auth/app/app.js';
+import Middleware from '../middleware/ExecptionMiddleware';
+import PasswordService from '../infrastructure/PasswordService';
+import { RabbitMQService } from '../infrastructure/RabbitMQService'; 
+import { ProductController } from '../Product/app/app';
 require('dotenv').config();
 
 const app = express();
@@ -21,7 +21,10 @@ app.use(bodyParser.urlencoded({ extended: true }));
 container.get<UserController>(UserController);
 container.get<ProductController>(ProductController);
 
-const rabbitmqService = new RabbitMQService('amqp://localhost', 'Queue'); 
+const rabbitmqService = container.get<RabbitMQService>('RabbitMQServiceQueue1');
+
+const rabbitmqService2 = container.get<RabbitMQService>('RabbitMQServiceQueue2');
+
 
 
 app.post('/api/queu1', (req, res) => {
@@ -42,7 +45,7 @@ app.post('/api/queu2', (req, res) => {
   const requestData = req.body;
   const messageText = JSON.stringify(requestData); 
 
-  rabbitmqService.sendMessage(messageText, (error: any) => {
+  rabbitmqService2.sendMessage(messageText, (error: any) => {
     if (error) {
       console.error('RabbitMQ bağlantı veya gönderme hatası:', error);
       res.status(500).send('RabbitMQ hatası');

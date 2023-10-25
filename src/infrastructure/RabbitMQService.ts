@@ -1,75 +1,67 @@
 import amqplib from 'amqplib/callback_api';
+import { injectable } from 'inversify';
 
+@injectable()
 export class RabbitMQService {
-    private connection: amqplib.Connection | undefined;
-    private channel: amqplib.Channel | undefined;
+    private static sharedChannel: amqplib.Channel | undefined;
+
     private queueName: string;
     private messageHandler: (message: string) => void;
 
     constructor(rabbitmqServer: string, queueName: string) {
         this.queueName = queueName;
-        this.messageHandler = (_message: string) => {}; 
+        this.messageHandler = (_message: string) => {};
 
-        amqplib.connect(rabbitmqServer, (error, connection) => {
-            if (error) {
-                console.error('RabbitMQ bağlantı hatası:', error);
-                return;
-            }
+        if (!RabbitMQService.sharedChannel) {
 
-            this.connection = connection;
-
-            this.connection.createChannel((error, channel) => {
+            amqplib.connect(rabbitmqServer, (error, connection) => {
                 if (error) {
-                    console.error('RabbitMQ kanalı oluşturma hatası:', error);
-                    connection.close();
+                    console.error('RabbitMQ bağlantı hatası:', error);
                     return;
                 }
 
-                this.channel = channel;
-                this.channel.assertQueue(this.queueName, { durable: false });
-                console.log(`Listening for messages in ${this.queueName}...`);
+                connection.createChannel((error, channel) => {
+                    if (error) {
+                        console.error('RabbitMQ kanalı oluşturma hatası:', error);
+                        connection.close();
+                        return;
+                    }
 
-                this.startConsumingMessages();
+                    RabbitMQService.sharedChannel = channel;
+                    channel.assertQueue(this.queueName, { durable: false });
+                    console.log(`Listening for messages in ${this.queueName}...`);
+                    this.startConsumingMessages(channel);
+                });
             });
-        });
+        } else {
+            // If the shared channel already exists, use it
+            this.startConsumingMessages(RabbitMQService.sharedChannel);
+        }
     }
 
-   
     public onMessageReceived(callback: (message: string) => void) {
         this.messageHandler = callback;
     }
-   
 
-
-    private startConsumingMessages() {
-        if (!this.channel) {
-            console.error('Kanal oluşturulmamış.');
-            return;
-        }
-
-        this.channel.consume(this.queueName, (message) => {
+    private startConsumingMessages(channel: amqplib.Channel) {
+        channel.consume(this.queueName, (message) => {
             if (message) {
                 const content = message.content.toString();
-
-  
                 this.messageHandler(content);
-
-                this.channel?.ack(message);
+                channel.ack(message);
             }
         });
     }
 
     public sendMessage(message: string, callback: (error: any) => void) {
-        if (!this.channel) {
+        if (!RabbitMQService.sharedChannel) {
             console.error('Kanal oluşturulmamış.');
             callback('Kanal oluşturulmamış hatası');
             return;
         }
 
-        this.channel.sendToQueue(this.queueName, Buffer.from(message));
+        RabbitMQService.sharedChannel.sendToQueue(this.queueName, Buffer.from(message));
         console.log('RabbitMQ\'ya istek gönderildi:', message);
-
-
-        callback(null); 
+        callback(null);
     }
 }
