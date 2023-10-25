@@ -29,7 +29,6 @@ export class UserController {
 
     public async handleMessage1(message: string) {
         const messageData = JSON.parse(message);
-
         if (messageData.action === 'login') {
             const response = await this.userAppService.loginUser(messageData.username, messageData.password);
             console.log('Login response:', response);

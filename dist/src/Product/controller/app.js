@@ -15,34 +15,45 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ProductApplicationService = exports.ProductController = void 0;
+exports.ProductController = void 0;
 const ProductService_1 = require("../../Product/domain/Product/ProductService");
 const inversify_1 = require("inversify");
 const express_1 = __importDefault(require("express"));
-const ApiResponse_1 = require("../../infrastructure/ApiResponse");
 const ProductApplicationService_1 = require("../appservices/ProductApplicationService");
-Object.defineProperty(exports, "ProductApplicationService", { enumerable: true, get: function () { return ProductApplicationService_1.ProductApplicationService; } });
+const RabbitMQService_1 = require("../../infrastructure/RabbitMQService");
+require("reflect-metadata");
 let ProductController = class ProductController {
     constructor(productService) {
         this.productService = productService;
         this.router = express_1.default.Router();
         this.productAppService = new ProductApplicationService_1.ProductApplicationService(productService);
-        this.initRoutes();
-    }
-    initRoutes() {
-        this.router.post('/create', async (req, res) => {
-            const { name, price, stock } = req.body;
-            const createdProduct = await this.productAppService.createProduct(name, price, stock);
-            if (createdProduct) {
-                res.json(new ApiResponse_1.ApiResponse(0, 'Product created successfully', createdProduct));
-            }
-            else {
-                res.status(500).json(new ApiResponse_1.ApiResponse(1, 'Failed to create product', null));
-            }
+        this.rabbitmqService1 = new RabbitMQService_1.RabbitMQService('amqp://localhost', "Queue3");
+        this.rabbitmqService1.onMessageReceived((message) => {
+            this.handleMessage1(message);
         });
     }
-    getRouter() {
-        return this.router;
+    async handleMessage1(message) {
+        const messageData = JSON.parse(message);
+        if (messageData.action === 'create') {
+            const createResult = await this.productAppService.createProduct(messageData.name, messageData.price, messageData.stock);
+            console.log('result', createResult);
+        }
+        else if (messageData.action === 'update') {
+            const createResult = await this.productAppService.updateProduct(messageData.id, messageData.name, messageData.price, messageData.stock);
+            console.log('result', createResult);
+        }
+        else if (messageData.action === 'delete') {
+            const createResult = await this.productAppService.deleteProduct(messageData.id);
+            console.log('result', createResult);
+        }
+        else if (messageData.action === 'get') {
+            const createResult = await this.productAppService.getProductById(messageData.id);
+            console.log('result', createResult);
+        }
+        else if (messageData.action === 'getAll') {
+            const createResult = await this.productAppService.getAllProducts();
+            console.log('result', createResult);
+        }
     }
 };
 exports.ProductController = ProductController;

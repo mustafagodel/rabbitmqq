@@ -8,7 +8,7 @@ const callback_api_1 = __importDefault(require("amqplib/callback_api"));
 class RabbitMQService {
     constructor(rabbitmqServer, queueName) {
         this.queueName = queueName;
-        this.messageHandler = (_message) => { }; // Boş bir callback ile başlayın
+        this.messageHandler = (_message) => { };
         callback_api_1.default.connect(rabbitmqServer, (error, connection) => {
             if (error) {
                 console.error('RabbitMQ bağlantı hatası:', error);
@@ -24,12 +24,10 @@ class RabbitMQService {
                 this.channel = channel;
                 this.channel.assertQueue(this.queueName, { durable: false });
                 console.log(`Listening for messages in ${this.queueName}...`);
-                // Mesajları tüketmeye başla
                 this.startConsumingMessages();
             });
         });
     }
-    // Dışarıdan mesajları işleyecek bir callback'i kaydetmek için kullanılır
     onMessageReceived(callback) {
         this.messageHandler = callback;
     }
@@ -41,9 +39,7 @@ class RabbitMQService {
         this.channel.consume(this.queueName, (message) => {
             if (message) {
                 const content = message.content.toString();
-                // Mesaj işlemesini başlat
                 this.messageHandler(content);
-                // Mesaj işlendikten sonra, RabbitMQ'ya yanıt vermelisiniz.
                 this.channel?.ack(message);
             }
         });
@@ -56,8 +52,7 @@ class RabbitMQService {
         }
         this.channel.sendToQueue(this.queueName, Buffer.from(message));
         console.log('RabbitMQ\'ya istek gönderildi:', message);
-        // İşlem tamamlandığında callback'i çağır
-        callback(null); // Herhangi bir hata olmadığını belirtmek için null
+        callback(null);
     }
 }
 exports.RabbitMQService = RabbitMQService;

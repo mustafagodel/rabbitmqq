@@ -38,6 +38,8 @@ export class RabbitMQService {
     public onMessageReceived(callback: (message: string) => void) {
         this.messageHandler = callback;
     }
+   
+
 
     private startConsumingMessages() {
         if (!this.channel) {
@@ -49,10 +51,9 @@ export class RabbitMQService {
             if (message) {
                 const content = message.content.toString();
 
-                // Mesaj işlemesini başlat
+  
                 this.messageHandler(content);
 
-                // Mesaj işlendikten sonra, RabbitMQ'ya yanıt vermelisiniz.
                 this.channel?.ack(message);
             }
         });
@@ -68,7 +69,7 @@ export class RabbitMQService {
         this.channel.sendToQueue(this.queueName, Buffer.from(message));
         console.log('RabbitMQ\'ya istek gönderildi:', message);
 
-        // İşlem tamamlandığında callback'i çağır
-        callback(null); // Herhangi bir hata olmadığını belirtmek için null
+
+        callback(null); 
     }
 }
