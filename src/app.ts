@@ -29,9 +29,8 @@ rabbitmqService.onMessageReceived((message: string) => {
 });
 app.post('/other', (req, res) => {
   const requestData = req.body;
-  const messageText = JSON.stringify(requestData); // JSON verisini dizeye dönüştür
+  const messageText = JSON.stringify(requestData); 
 
-  // RabbitMQ servisine isteği gönder
   rabbitmqService.sendMessage(messageText, (error: any) => {
     if (error) {
       console.error('RabbitMQ bağlantı veya gönderme hatası:', error);

@@ -4,11 +4,11 @@ export class RabbitMQService {
     private connection: amqplib.Connection | undefined;
     private channel: amqplib.Channel | undefined;
     private queueName: string;
-    private messageHandler: (message: string) => void; // Mesajları işleyecek olan callback
+    private messageHandler: (message: string) => void;
 
     constructor(rabbitmqServer: string, queueName: string) {
         this.queueName = queueName;
-        this.messageHandler = (_message: string) => {}; // Boş bir callback ile başlayın
+        this.messageHandler = (_message: string) => {}; 
 
         amqplib.connect(rabbitmqServer, (error, connection) => {
             if (error) {
@@ -29,13 +29,12 @@ export class RabbitMQService {
                 this.channel.assertQueue(this.queueName, { durable: false });
                 console.log(`Listening for messages in ${this.queueName}...`);
 
-                // Mesajları tüketmeye başla
                 this.startConsumingMessages();
             });
         });
     }
 
-    // Dışarıdan mesajları işleyecek bir callback'i kaydetmek için kullanılır
+   
     public onMessageReceived(callback: (message: string) => void) {
         this.messageHandler = callback;
     }
