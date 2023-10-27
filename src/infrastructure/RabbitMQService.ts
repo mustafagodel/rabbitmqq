@@ -4,7 +4,7 @@ import { injectable } from 'inversify';
 @injectable()
 export class RabbitMQService {
     private channel: amqplib.Channel | undefined;
-    private isConsuming: boolean = false; // İşlemcinin aktif olduğunu gösteren bayrak
+    private isConsuming: boolean = false; 
 
     private queueName: string;
     private messageHandler: (message: string) => void;
