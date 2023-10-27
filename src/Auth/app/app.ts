@@ -20,6 +20,7 @@ export class UserController {
         @inject(UserService) private userService: UserService,
         @inject(PasswordService) passwordService: PasswordService,
         @inject('RabbitMQServiceQueue1') private rabbitmqService1: RabbitMQService
+        
     ) {
         this.userAppService = new UserApplicationService(userService);
 
