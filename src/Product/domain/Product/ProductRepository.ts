@@ -18,11 +18,11 @@ export class ProductRepository {
             if (result.acknowledged) {
                 return { success: true };
             } else {
-                console.error('Ekleme işlemi başarısız:', result.acknowledged);
+                console.error('The insertion operation failed:', result.acknowledged);
                 return { success: false };
             }
         } catch (error) {
-            console.error('MongoDB ekleme hatası:', error);
+            console.error('MongoDB insertion error:', error);
             return { success: false };
         }
     }
@@ -33,11 +33,11 @@ export class ProductRepository {
             if (result.modifiedCount && result.modifiedCount > 0) {
                 return { success: true };
             } else {
-                console.error('Güncelleme işlemi başarısız:', result);
+                console.error('The update process failed:', result);
                 return { success: false };
             }
         } catch (error) {
-            console.error('MongoDB güncelleme hatası:', error);
+            console.error('MongoDB update error:', error);
             return { success: false };
         }
     }
@@ -48,11 +48,11 @@ export class ProductRepository {
             if (result.deletedCount && result.deletedCount > 0) {
                 return { success: true };
             } else {
-                console.error('Silme işlemi başarısız:', result);
+                console.error('The deletion process failed:', result);
                 return { success: false };
             }
         } catch (error) {
-            console.error('MongoDB silme hatası:', error);
+            console.error('MongoDB deletion error:', error);
             return { success: false };
         }
     }
@@ -74,7 +74,7 @@ export class ProductRepository {
 
             return product;
         } catch (error) {
-            console.error('MongoDB sorgusu hatası:', error);
+            console.error('MongoDB Query error:', error);
             throw error;
         }
     }
@@ -94,7 +94,7 @@ export class ProductRepository {
 
             return products;
         } catch (error) {
-            console.error('MongoDB sorgusu hatası:', error);
+            console.error('MongoDB Query error:', error);
             throw error;
         }
     }

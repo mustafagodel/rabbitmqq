@@ -15,9 +15,9 @@ export class MongoDBConnector {
         try {
             await this.client.connect();
             this.db = this.client.db('Database1'); 
-            console.log('MongoDB bağlantısı başarılı.');
+            console.log('the MongoDB connection was succesful:');
         } catch (error) {
-            console.error('MongoDB bağlantı hatası:', error);
+            console.error('The MongoDB connection was failed:', error);
             throw error;
         }
     }

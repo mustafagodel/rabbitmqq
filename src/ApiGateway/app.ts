@@ -25,10 +25,61 @@ container.get<ProductController>(ProductController);
 const rabbitmqService = container.get<RabbitMQService>('RabbitMQServiceQueue1');
 const rabbitmqService2 = container.get<RabbitMQService>('RabbitMQServiceQueue2');
 
+app.post('/api/ProcessRequest', (req, res) => {
+  const requestData = req.body;
+  const messageText = JSON.stringify(requestData);
+
+  
+  const actionToServiceMap: Record<string, RabbitMQService> = {
+    'login': rabbitmqService,
+    'register': rabbitmqService,
+    'create': rabbitmqService2,
+    'get': rabbitmqService2,
+    'delete': rabbitmqService2,
+    'getAll': rabbitmqService2,
+    'update': rabbitmqService2,
+  };
+
+  const rabbitmqServiceToUse = actionToServiceMap[requestData.action];
+
+  if (!rabbitmqServiceToUse) {
+    return res.status(400).json({ error: 'Invalid action.' });
+  }
+
+  rabbitmqServiceToUse.sendMessage(messageText, (error) => {
+    if (error) {
+      console.log('RabbitMQ is connected or Sending error:', error);
+      return res.status(500).json(error);
+    }
+    console.log('The Request was received and Sent RabbitMQ');
+    const responseActionsMap: Record<string, string[]> = {
+      'login': ['login_response'],
+      'register': ['register_response'],
+      'create': ['create_response'],
+      'get': ['get_response'],
+      'delete': ['delete_response'],
+      'getAll': ['getAll_response'],
+      'update': ['update_response'],
+    };
+
+      rabbitmqServiceToUse.onMessageReceived((message) => {
+        const messageData = JSON.parse(message);
+        const validActions = responseActionsMap[requestData.action] || [];
+  
+        if (validActions.includes(messageData.action)) {
+          res.status(200).json(messageData);
+        } else {
+          res.status(400).json({ error: 'Invalid transaction.' });
+        }
+      });
+    });
+});
 
 
 
-app.post('/api/queu1', (req, res) => {
+
+
+app.post('/api/Login', (req, res) => {
   const requestData = req.body;
   const messageText = JSON.stringify(requestData); 
 
@@ -51,7 +102,7 @@ app.post('/api/queu1', (req, res) => {
 });
 
 
-app.post('/api/queu2', (req, res) => {
+app.post('/api/Product ', (req, res) => {
   const requestData = req.body;
   const messageText = JSON.stringify(requestData); 
 

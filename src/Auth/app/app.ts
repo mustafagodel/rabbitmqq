@@ -61,9 +61,9 @@ export class UserController {
      
             this.rabbitmqService1.sendMessage(responseMessageText, (error: any) => {
                 if (error) {
-                    console.error('RabbitMQ bağlantı veya gönderme hatası:', error);
+                    console.error('RabbitMQ is connected or Sending error:', error);
                 } else {
-                    console.log('Response mesajı RabbitMQ\'ya gönderildi.');
+                    console.log('The response message has been sent to RabbitMQ. ');
                 }
             });
         }

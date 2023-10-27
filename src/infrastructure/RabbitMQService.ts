@@ -15,13 +15,13 @@ export class RabbitMQService {
 
         amqplib.connect(rabbitmqServer, (error, connection) => {
             if (error) {
-                console.error('RabbitMQ bağlantı hatası:', error);
+                console.error('RabbitMQ connection error:', error);
                 return;
             }
 
             connection.createChannel((error, channel) => {
                 if (error) {
-                    console.error('RabbitMQ kanalı oluşturma hatası:', error);
+                    console.error('RabbitMQ channel creation error:', error);
                     connection.close();
                     return;
                 }
@@ -40,7 +40,7 @@ export class RabbitMQService {
 
     private startConsumingMessages(channel: amqplib.Channel) {
         if (this.isConsuming) {
-            console.log('Zaten mesajları işliyor.');
+            console.log('Already processing the messages.');
             return;
         }
         this.isConsuming = true;
@@ -56,13 +56,13 @@ export class RabbitMQService {
 
     public sendMessage(message: string, callback: (error: any) => void) {
         if (!this.channel) {
-            console.error('Kanal oluşturulmamış.');
-            callback('Kanal oluşturulmamış hatası');
+            console.error('The channel has not been created.');
+            callback('The channel has not been created error');
             return;
         }
 
         this.channel.sendToQueue(this.queueName, Buffer.from(message));
-        console.log('RabbitMQ\'ya istek gönderildi:', message);
+        console.log('The request was received sent RabbitMQ', message);
         callback(null);
     }
 }

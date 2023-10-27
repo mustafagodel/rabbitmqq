@@ -48,11 +48,11 @@ export class UserRepository {
   if (result.acknowledged) {
     return { success: true };
   } else {
-    console.error('Ekleme işlemi başarısız:', result.acknowledged);
+    console.error('The insertion operaiton failed: ', result.acknowledged);
     return { success: false };
   }
 } catch (error) {
-  console.error('MongoDB ekleme hatası:', error);
+  console.error('The insertion MongoDB failed:', error);
   return { success: false };
 }
     }}

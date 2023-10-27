@@ -39,9 +39,9 @@ export class ProductController {
      
             this.rabbitmqService1.sendMessage(responseMessageText, (error: any) => {
                 if (error) {
-                    console.error('RabbitMQ bağlantı veya gönderme hatası:', error);
+                    console.error('RabbitMQ connection or sending error:', error);
                 } else {
-                    console.log('Response mesajı RabbitMQ\'ya gönderildi.');
+                    console.log('The response message has been sent to RabbitMQ.');
                 }
             });
         
@@ -64,9 +64,9 @@ export class ProductController {
      
             this.rabbitmqService1.sendMessage(responseMessageText, (error: any) => {
                 if (error) {
-                    console.error('RabbitMQ bağlantı veya gönderme hatası:', error);
-                } else {
-                    console.log('Response mesajı RabbitMQ\'ya gönderildi.');
+                    console.error('RabbitMQ connection or sending error:', error);
+                  } else {
+                     console.log('The response message has been sent to RabbitMQ.');
                 }
             });
         }
@@ -85,9 +85,9 @@ export class ProductController {
      
             this.rabbitmqService1.sendMessage(responseMessageText, (error: any) => {
                 if (error) {
-                    console.error('RabbitMQ bağlantı veya gönderme hatası:', error);
+                    console.error('RabbitMQ connection or sending error:', error);
                 } else {
-                    console.log('Response mesajı RabbitMQ\'ya gönderildi.');
+                    console.log('The response message has been sent to RabbitMQ.');
                 }
             });
         }  else if (messageData.action === 'get') {
