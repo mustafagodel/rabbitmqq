@@ -25,12 +25,12 @@ export class UserController {
         this.userAppService = userAppService; 
 
         this.rabbitmqService1.onMessageReceived((message: string) => {
-            this.handleMessage1(message);
+            this.handleMessage(message);
         });
     }
 
 
-    public async handleMessage1(message: string) {
+    public async handleMessage(message: string) {
         const messageData = JSON.parse(message);
     
         if (messageData.action === 'login') {

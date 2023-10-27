@@ -21,11 +21,11 @@ export class ProductController {
         this.productAppService = productApplicationService;
 
         this.rabbitmqService1.onMessageReceived((message: string) => {
-            this.handleMessage1(message);
+            this.handleMessage(message);
         });
     }
     
-    public async handleMessage1(message: string) {
+    public async handleMessage(message: string) {
         const messageData = JSON.parse(message);
         if (messageData.action === 'create') {
             const createResult = await this.productAppService.createProduct(messageData.name,messageData.price,messageData.stock );

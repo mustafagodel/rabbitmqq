@@ -65,19 +65,17 @@ app.post('/api/queu2', (req, res) => {
   });
   rabbitmqService2.onMessageReceived((message) => {
     const messageData = JSON.parse(message);
-    if (messageData.action === 'create_response') {
-      res.status(500).json(messageData);
-    }else  if (messageData.action === 'get_response') {
-      res.status(500).json(messageData);
-    }
-    else  if (messageData.action === 'delete_response') {
-      res.status(500).json(messageData);
-    }
-    else  if (messageData.action === 'getAll_response') {
-      res.status(500).json(messageData);
-    }
-    else  if (messageData.action === 'update_response') {
-      res.status(500).json(messageData);
+    switch (messageData.action) {
+      case 'create_response':
+      case 'get_response':
+      case 'delete_response':
+      case 'getAll_response':
+      case 'update_response':
+        res.status(500).json(messageData);
+        break;
+      default:
+      
+        break;
     }
   });
 });
