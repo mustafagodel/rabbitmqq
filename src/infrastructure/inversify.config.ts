@@ -12,7 +12,8 @@ import { ProductController } from '../Product/app/app';
 import { Product } from '../Product/domain/Product/Product';
 import { ProductRepository } from '../Product/domain/Product/ProductRepository';
 import { ProductService } from '../Product/domain/Product/ProductService';
-import { RabbitMQService } from '../../src/infrastructure/RabbitMQService'; 
+import { RabbitMQService } from '../../src/infrastructure/RabbitMQService';
+import { RequestResponseMap } from '../infrastructure/RequestResponseMap';  
 
 const configureContainer = (container: Container) => {
 container.bind<MongoDBConnector>(MongoDBConnector).to(MongoDBConnector);
@@ -35,7 +36,7 @@ container.bind<RabbitMQService>('RabbitMQServiceQueue1').toDynamicValue(() => {
   container.bind<RabbitMQService>('RabbitMQServiceQueue3').toDynamicValue(() => {
     return new RabbitMQService('amqp://localhost', 'Queue3');
   })
-
+  container.bind<RequestResponseMap>(RequestResponseMap).toSelf();
 };
 
 export default configureContainer;
