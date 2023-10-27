@@ -21,7 +21,6 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 container.get<UserController>(UserController);
 container.get<ProductController>(ProductController);
-
 const requestResponseMap = container.get<RequestResponseMap>(RequestResponseMap);
 
 app.post('/api', (req, res) => {

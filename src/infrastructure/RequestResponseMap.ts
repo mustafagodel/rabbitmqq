@@ -1,4 +1,4 @@
-// RequestResponseMap.ts
+
 import { RabbitMQService } from './RabbitMQService';
 import { inject, injectable } from 'inversify';
 
