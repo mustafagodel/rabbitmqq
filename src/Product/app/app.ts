@@ -14,10 +14,11 @@ export class ProductController {
 
     constructor(
         @inject(ProductService) private productService: ProductService,
-        @inject('RabbitMQServiceQueue2') private rabbitmqService1: RabbitMQService
+        @inject('RabbitMQServiceQueue2') private rabbitmqService1: RabbitMQService,
+        @inject(ProductApplicationService) private productApplicationService: ProductApplicationService,
     ) {
         this.router = express.Router();
-        this.productAppService = new ProductApplicationService(productService);
+        this.productAppService = productApplicationService;
 
         this.rabbitmqService1.onMessageReceived((message: string) => {
             this.handleMessage1(message);
@@ -29,7 +30,21 @@ export class ProductController {
         if (messageData.action === 'create') {
             const createResult = await this.productAppService.createProduct(messageData.name,messageData.price,messageData.stock );
     
-            console.log('result', createResult);
+            const responseMessage = {
+                action: 'create_response',
+                response: createResult,
+            };
+            const responseMessageText = JSON.stringify(responseMessage);
+    
+     
+            this.rabbitmqService1.sendMessage(responseMessageText, (error: any) => {
+                if (error) {
+                    console.error('RabbitMQ bağlantı veya gönderme hatası:', error);
+                } else {
+                    console.log('Response mesajı RabbitMQ\'ya gönderildi.');
+                }
+            });
+        
 
         }
        else if (messageData.action === 'update') {
@@ -40,24 +55,76 @@ export class ProductController {
                 messageData.stock
             );
     
-            console.log('result', createResult);
+            const responseMessage = {
+                action: 'update_response',
+                response: createResult,
+            };
+            const responseMessageText = JSON.stringify(responseMessage);
+    
+     
+            this.rabbitmqService1.sendMessage(responseMessageText, (error: any) => {
+                if (error) {
+                    console.error('RabbitMQ bağlantı veya gönderme hatası:', error);
+                } else {
+                    console.log('Response mesajı RabbitMQ\'ya gönderildi.');
+                }
+            });
         }
+        
         else if (messageData.action === 'delete') {
             const createResult = await this.productAppService.deleteProduct(
                 messageData.id,
             );
     
-            console.log('result', createResult);
+            const responseMessage = {
+                action: 'delete_response',
+                response: createResult,
+            };
+            const responseMessageText = JSON.stringify(responseMessage);
+    
+     
+            this.rabbitmqService1.sendMessage(responseMessageText, (error: any) => {
+                if (error) {
+                    console.error('RabbitMQ bağlantı veya gönderme hatası:', error);
+                } else {
+                    console.log('Response mesajı RabbitMQ\'ya gönderildi.');
+                }
+            });
         }  else if (messageData.action === 'get') {
             const createResult = await this.productAppService.getProductById(
                 messageData.id,
             );
+            const responseMessage = {
+                action: 'get_response',
+                response: createResult,
+            };
+            const responseMessageText = JSON.stringify(responseMessage);
     
-            console.log('result', createResult);
+     
+            this.rabbitmqService1.sendMessage(responseMessageText, (error: any) => {
+                if (error) {
+                    console.error('RabbitMQ bağlantı veya gönderme hatası:', error);
+                } else {
+                    console.log('Response mesajı RabbitMQ\'ya gönderildi.');
+                }
+            });
         }else if (messageData.action === 'getAll') {
             const createResult = await this.productAppService.getAllProducts();
     
-            console.log('result', createResult);
+            const responseMessage = {
+                action: 'getAll_response',
+                response: createResult,
+            };
+            const responseMessageText = JSON.stringify(responseMessage);
+    
+     
+            this.rabbitmqService1.sendMessage(responseMessageText, (error: any) => {
+                if (error) {
+                    console.error('RabbitMQ bağlantı veya gönderme hatası:', error);
+                } else {
+                    console.log('Response mesajı RabbitMQ\'ya gönderildi.');
+                }
+            });
         }
     }
 }

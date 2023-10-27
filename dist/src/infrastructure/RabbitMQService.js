@@ -11,43 +11,42 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-var RabbitMQService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RabbitMQService = void 0;
 const callback_api_1 = __importDefault(require("amqplib/callback_api"));
 const inversify_1 = require("inversify");
-let RabbitMQService = RabbitMQService_1 = class RabbitMQService {
+let RabbitMQService = class RabbitMQService {
     constructor(rabbitmqServer, queueName) {
+        this.isConsuming = false; // İşlemcinin aktif olduğunu gösteren bayrak
         this.queueName = queueName;
         this.messageHandler = (_message) => { };
-        if (!RabbitMQService_1.sharedChannel) {
-            callback_api_1.default.connect(rabbitmqServer, (error, connection) => {
+        callback_api_1.default.connect(rabbitmqServer, (error, connection) => {
+            if (error) {
+                console.error('RabbitMQ bağlantı hatası:', error);
+                return;
+            }
+            connection.createChannel((error, channel) => {
                 if (error) {
-                    console.error('RabbitMQ bağlantı hatası:', error);
+                    console.error('RabbitMQ kanalı oluşturma hatası:', error);
+                    connection.close();
                     return;
                 }
-                connection.createChannel((error, channel) => {
-                    if (error) {
-                        console.error('RabbitMQ kanalı oluşturma hatası:', error);
-                        connection.close();
-                        return;
-                    }
-                    RabbitMQService_1.sharedChannel = channel;
-                    channel.assertQueue(this.queueName, { durable: false });
-                    console.log(`Listening for messages in ${this.queueName}...`);
-                    this.startConsumingMessages(channel);
-                });
+                this.channel = channel;
+                channel.assertQueue(this.queueName, { durable: false });
+                console.log(`Listening for messages in ${this.queueName}...`);
+                this.startConsumingMessages(channel);
             });
-        }
-        else {
-            // If the shared channel already exists, use it
-            this.startConsumingMessages(RabbitMQService_1.sharedChannel);
-        }
+        });
     }
     onMessageReceived(callback) {
         this.messageHandler = callback;
     }
     startConsumingMessages(channel) {
+        if (this.isConsuming) {
+            console.log('Zaten mesajları işliyor.');
+            return;
+        }
+        this.isConsuming = true;
         channel.consume(this.queueName, (message) => {
             if (message) {
                 const content = message.content.toString();
@@ -57,18 +56,18 @@ let RabbitMQService = RabbitMQService_1 = class RabbitMQService {
         });
     }
     sendMessage(message, callback) {
-        if (!RabbitMQService_1.sharedChannel) {
+        if (!this.channel) {
             console.error('Kanal oluşturulmamış.');
             callback('Kanal oluşturulmamış hatası');
             return;
         }
-        RabbitMQService_1.sharedChannel.sendToQueue(this.queueName, Buffer.from(message));
+        this.channel.sendToQueue(this.queueName, Buffer.from(message));
         console.log('RabbitMQ\'ya istek gönderildi:', message);
         callback(null);
     }
 };
 exports.RabbitMQService = RabbitMQService;
-exports.RabbitMQService = RabbitMQService = RabbitMQService_1 = __decorate([
+exports.RabbitMQService = RabbitMQService = __decorate([
     (0, inversify_1.injectable)(),
     __metadata("design:paramtypes", [String, String])
 ], RabbitMQService);

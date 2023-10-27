@@ -28,11 +28,19 @@ app.post('/api/queu1', (req, res) => {
     const messageText = JSON.stringify(requestData);
     rabbitmqService.sendMessage(messageText, (error) => {
         if (error) {
-            console.error('RabbitMQ bağlantı veya gönderme hatası:', error);
-            res.status(500).send('RabbitMQ hatası');
+            console.log('RabbitMQ bağlantı veya gönderme hatası:', error);
         }
         else {
-            res.send('İstek alındı ve RabbitMQ\'ya iletiliyor.');
+            console.log('İstek alındı ve RabbitMQ\'ya iletiliyor.');
+        }
+    });
+    rabbitmqService.onMessageReceived((message) => {
+        const messageData = JSON.parse(message);
+        if (messageData.action === 'login_response') {
+            res.status(500).json(messageData);
+        }
+        else if (messageData.action === 'register_response') {
+            res.status(500).json(messageData);
         }
     });
 });
@@ -41,11 +49,28 @@ app.post('/api/queu2', (req, res) => {
     const messageText = JSON.stringify(requestData);
     rabbitmqService2.sendMessage(messageText, (error) => {
         if (error) {
-            console.error('RabbitMQ bağlantı veya gönderme hatası:', error);
-            res.status(500).send('RabbitMQ hatası');
+            console.log('RabbitMQ bağlantı veya gönderme hatası:', error);
         }
         else {
-            res.send('İstek alındı ve RabbitMQ\'ya iletiliyor.');
+            console.log('İstek alındı ve RabbitMQ\'ya iletiliyor.');
+        }
+    });
+    rabbitmqService2.onMessageReceived((message) => {
+        const messageData = JSON.parse(message);
+        if (messageData.action === 'create_response') {
+            res.status(500).json(messageData);
+        }
+        else if (messageData.action === 'get_response') {
+            res.status(500).json(messageData);
+        }
+        else if (messageData.action === 'delete_response') {
+            res.status(500).json(messageData);
+        }
+        else if (messageData.action === 'getAll_response') {
+            res.status(500).json(messageData);
+        }
+        else if (messageData.action === 'update_response') {
+            res.status(500).json(messageData);
         }
     });
 });

@@ -20,10 +20,10 @@ const UserApplicationService_1 = require("../appservices/UserApplicationService"
 const PasswordService_1 = require("../../infrastructure/PasswordService");
 const RabbitMQService_1 = require("../../infrastructure/RabbitMQService");
 let UserController = class UserController {
-    constructor(userService, passwordService, rabbitmqService1) {
+    constructor(userService, passwordService, rabbitmqService1, userAppService) {
         this.userService = userService;
         this.rabbitmqService1 = rabbitmqService1;
-        this.userAppService = new UserApplicationService_1.UserApplicationService(userService);
+        this.userAppService = userAppService;
         this.rabbitmqService1.onMessageReceived((message) => {
             this.handleMessage1(message);
         });
@@ -32,11 +32,36 @@ let UserController = class UserController {
         const messageData = JSON.parse(message);
         if (messageData.action === 'login') {
             const response = await this.userAppService.loginUser(messageData.username, messageData.password);
-            console.log('Login response:', response);
+            const responseMessage = {
+                action: 'login_response',
+                response: response,
+            };
+            const responseMessageText = JSON.stringify(responseMessage);
+            this.rabbitmqService1.sendMessage(responseMessageText, (error) => {
+                if (error) {
+                    console.error('RabbitMQ bağlantı veya gönderme hatası:', error);
+                }
+                else {
+                    console.log('Response mesajı RabbitMQ\'ya gönderildi.');
+                }
+            });
         }
         else if (messageData.action === 'register') {
             const registrationResponse = await this.userAppService.registerUser(messageData.username, messageData.password);
             console.log('Register response:', registrationResponse);
+            const responseMessage = {
+                action: 'register_response',
+                response: registrationResponse,
+            };
+            const responseMessageText = JSON.stringify(responseMessage);
+            this.rabbitmqService1.sendMessage(responseMessageText, (error) => {
+                if (error) {
+                    console.error('RabbitMQ bağlantı veya gönderme hatası:', error);
+                }
+                else {
+                    console.log('Response mesajı RabbitMQ\'ya gönderildi.');
+                }
+            });
         }
     }
 };
@@ -46,8 +71,10 @@ exports.UserController = UserController = __decorate([
     __param(0, (0, inversify_1.inject)(UserService_1.UserService)),
     __param(1, (0, inversify_1.inject)(PasswordService_1.PasswordService)),
     __param(2, (0, inversify_1.inject)('RabbitMQServiceQueue1')),
+    __param(3, (0, inversify_1.inject)(UserApplicationService_1.UserApplicationService)),
     __metadata("design:paramtypes", [UserService_1.UserService,
         PasswordService_1.PasswordService,
-        RabbitMQService_1.RabbitMQService])
+        RabbitMQService_1.RabbitMQService,
+        UserApplicationService_1.UserApplicationService])
 ], UserController);
 //# sourceMappingURL=app.js.map

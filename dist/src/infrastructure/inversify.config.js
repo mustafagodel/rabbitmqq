@@ -33,6 +33,9 @@ const configureContainer = (container) => {
     container.bind('RabbitMQServiceQueue2').toDynamicValue(() => {
         return new RabbitMQService_1.RabbitMQService('amqp://localhost', 'Queue2');
     });
+    container.bind('RabbitMQServiceQueue3').toDynamicValue(() => {
+        return new RabbitMQService_1.RabbitMQService('amqp://localhost', 'Queue3');
+    });
 };
 exports.default = configureContainer;
 //# sourceMappingURL=inversify.config.js.map

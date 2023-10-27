@@ -19,11 +19,10 @@ export class UserController {
     constructor(
         @inject(UserService) private userService: UserService,
         @inject(PasswordService) passwordService: PasswordService,
-        @inject('RabbitMQServiceQueue1') private rabbitmqService1: RabbitMQService
-        
+        @inject('RabbitMQServiceQueue1') private rabbitmqService1: RabbitMQService,
+        @inject(UserApplicationService) userAppService: UserApplicationService 
     ) {
-        this.userAppService = new UserApplicationService(userService);
-
+        this.userAppService = userAppService; 
 
         this.rabbitmqService1.onMessageReceived((message: string) => {
             this.handleMessage1(message);
@@ -31,16 +30,43 @@ export class UserController {
     }
 
 
-
     public async handleMessage1(message: string) {
         const messageData = JSON.parse(message);
-
+    
         if (messageData.action === 'login') {
             const response = await this.userAppService.loginUser(messageData.username, messageData.password);
-            console.log('Login response:', response);
+            const responseMessage = {
+                action: 'login_response',
+                response: response,
+            };
+            const responseMessageText = JSON.stringify(responseMessage);
+    
+            this.rabbitmqService1.sendMessage(responseMessageText, (error: any) => {
+                if (error) {
+                    console.error('RabbitMQ bağlantı veya gönderme hatası:', error);
+                } else {
+                    console.log('Response mesajı RabbitMQ\'ya gönderildi.');
+                }
+            });
         } else if (messageData.action === 'register') {
             const registrationResponse = await this.userAppService.registerUser(messageData.username, messageData.password);
             console.log('Register response:', registrationResponse);
+
+            const responseMessage = {
+                action: 'register_response',
+                response: registrationResponse,
+            };
+            const responseMessageText = JSON.stringify(responseMessage);
+    
+     
+            this.rabbitmqService1.sendMessage(responseMessageText, (error: any) => {
+                if (error) {
+                    console.error('RabbitMQ bağlantı veya gönderme hatası:', error);
+                } else {
+                    console.log('Response mesajı RabbitMQ\'ya gönderildi.');
+                }
+            });
         }
     }
+    
 }

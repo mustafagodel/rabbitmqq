@@ -23,11 +23,12 @@ const ProductApplicationService_1 = require("../appservices/ProductApplicationSe
 const RabbitMQService_1 = require("../../infrastructure/RabbitMQService");
 require("reflect-metadata");
 let ProductController = class ProductController {
-    constructor(productService, rabbitmqService1) {
+    constructor(productService, rabbitmqService1, productApplicationService) {
         this.productService = productService;
         this.rabbitmqService1 = rabbitmqService1;
+        this.productApplicationService = productApplicationService;
         this.router = express_1.default.Router();
-        this.productAppService = new ProductApplicationService_1.ProductApplicationService(productService);
+        this.productAppService = productApplicationService;
         this.rabbitmqService1.onMessageReceived((message) => {
             this.handleMessage1(message);
         });
@@ -36,23 +37,83 @@ let ProductController = class ProductController {
         const messageData = JSON.parse(message);
         if (messageData.action === 'create') {
             const createResult = await this.productAppService.createProduct(messageData.name, messageData.price, messageData.stock);
-            console.log('result', createResult);
+            const responseMessage = {
+                action: 'create_response',
+                response: createResult,
+            };
+            const responseMessageText = JSON.stringify(responseMessage);
+            this.rabbitmqService1.sendMessage(responseMessageText, (error) => {
+                if (error) {
+                    console.error('RabbitMQ bağlantı veya gönderme hatası:', error);
+                }
+                else {
+                    console.log('Response mesajı RabbitMQ\'ya gönderildi.');
+                }
+            });
         }
         else if (messageData.action === 'update') {
             const createResult = await this.productAppService.updateProduct(messageData.id, messageData.name, messageData.price, messageData.stock);
-            console.log('result', createResult);
+            const responseMessage = {
+                action: 'update_response',
+                response: createResult,
+            };
+            const responseMessageText = JSON.stringify(responseMessage);
+            this.rabbitmqService1.sendMessage(responseMessageText, (error) => {
+                if (error) {
+                    console.error('RabbitMQ bağlantı veya gönderme hatası:', error);
+                }
+                else {
+                    console.log('Response mesajı RabbitMQ\'ya gönderildi.');
+                }
+            });
         }
         else if (messageData.action === 'delete') {
             const createResult = await this.productAppService.deleteProduct(messageData.id);
-            console.log('result', createResult);
+            const responseMessage = {
+                action: 'delete_response',
+                response: createResult,
+            };
+            const responseMessageText = JSON.stringify(responseMessage);
+            this.rabbitmqService1.sendMessage(responseMessageText, (error) => {
+                if (error) {
+                    console.error('RabbitMQ bağlantı veya gönderme hatası:', error);
+                }
+                else {
+                    console.log('Response mesajı RabbitMQ\'ya gönderildi.');
+                }
+            });
         }
         else if (messageData.action === 'get') {
             const createResult = await this.productAppService.getProductById(messageData.id);
-            console.log('result', createResult);
+            const responseMessage = {
+                action: 'get_response',
+                response: createResult,
+            };
+            const responseMessageText = JSON.stringify(responseMessage);
+            this.rabbitmqService1.sendMessage(responseMessageText, (error) => {
+                if (error) {
+                    console.error('RabbitMQ bağlantı veya gönderme hatası:', error);
+                }
+                else {
+                    console.log('Response mesajı RabbitMQ\'ya gönderildi.');
+                }
+            });
         }
         else if (messageData.action === 'getAll') {
             const createResult = await this.productAppService.getAllProducts();
-            console.log('result', createResult);
+            const responseMessage = {
+                action: 'getAll_response',
+                response: createResult,
+            };
+            const responseMessageText = JSON.stringify(responseMessage);
+            this.rabbitmqService1.sendMessage(responseMessageText, (error) => {
+                if (error) {
+                    console.error('RabbitMQ bağlantı veya gönderme hatası:', error);
+                }
+                else {
+                    console.log('Response mesajı RabbitMQ\'ya gönderildi.');
+                }
+            });
         }
     }
 };
@@ -61,7 +122,9 @@ exports.ProductController = ProductController = __decorate([
     (0, inversify_1.injectable)(),
     __param(0, (0, inversify_1.inject)(ProductService_1.ProductService)),
     __param(1, (0, inversify_1.inject)('RabbitMQServiceQueue2')),
+    __param(2, (0, inversify_1.inject)(ProductApplicationService_1.ProductApplicationService)),
     __metadata("design:paramtypes", [ProductService_1.ProductService,
-        RabbitMQService_1.RabbitMQService])
+        RabbitMQService_1.RabbitMQService,
+        ProductApplicationService_1.ProductApplicationService])
 ], ProductController);
 //# sourceMappingURL=app.js.map

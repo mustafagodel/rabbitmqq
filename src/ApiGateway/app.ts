@@ -21,9 +21,10 @@ app.use(bodyParser.urlencoded({ extended: true }));
 container.get<UserController>(UserController);
 container.get<ProductController>(ProductController);
 
-const rabbitmqService = container.get<RabbitMQService>('RabbitMQServiceQueue1');
 
+const rabbitmqService = container.get<RabbitMQService>('RabbitMQServiceQueue1');
 const rabbitmqService2 = container.get<RabbitMQService>('RabbitMQServiceQueue2');
+
 
 
 
@@ -33,13 +34,23 @@ app.post('/api/queu1', (req, res) => {
 
   rabbitmqService.sendMessage(messageText, (error: any) => {
     if (error) {
-      console.error('RabbitMQ bağlantı veya gönderme hatası:', error);
-      res.status(500).send('RabbitMQ hatası');
+      console.log('RabbitMQ bağlantı veya gönderme hatası:', error);
     } else {
-      res.send('İstek alındı ve RabbitMQ\'ya iletiliyor.');
+      console.log('İstek alındı ve RabbitMQ\'ya iletiliyor.');
+    }
+  });
+
+  rabbitmqService.onMessageReceived((message) => {
+    const messageData = JSON.parse(message);
+    
+    if (messageData.action === 'login_response') {
+      res.status(500).json(messageData);
+    }else  if (messageData.action === 'register_response') {
+      res.status(500).json(messageData);
     }
   });
 });
+
 
 app.post('/api/queu2', (req, res) => {
   const requestData = req.body;
@@ -47,13 +58,31 @@ app.post('/api/queu2', (req, res) => {
 
   rabbitmqService2.sendMessage(messageText, (error: any) => {
     if (error) {
-      console.error('RabbitMQ bağlantı veya gönderme hatası:', error);
-      res.status(500).send('RabbitMQ hatası');
+      console.log('RabbitMQ bağlantı veya gönderme hatası:', error);
     } else {
-      res.send('İstek alındı ve RabbitMQ\'ya iletiliyor.');
+      console.log('İstek alındı ve RabbitMQ\'ya iletiliyor.');
+    }
+  });
+  rabbitmqService2.onMessageReceived((message) => {
+    const messageData = JSON.parse(message);
+    if (messageData.action === 'create_response') {
+      res.status(500).json(messageData);
+    }else  if (messageData.action === 'get_response') {
+      res.status(500).json(messageData);
+    }
+    else  if (messageData.action === 'delete_response') {
+      res.status(500).json(messageData);
+    }
+    else  if (messageData.action === 'getAll_response') {
+      res.status(500).json(messageData);
+    }
+    else  if (messageData.action === 'update_response') {
+      res.status(500).json(messageData);
     }
   });
 });
+
+
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
