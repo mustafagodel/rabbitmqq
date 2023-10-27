@@ -34,9 +34,9 @@ app.post('/api/queu1', (req, res) => {
 
   rabbitmqService.sendMessage(messageText, (error: any) => {
     if (error) {
-      console.log('RabbitMQ bağlantı veya gönderme hatası:', error);
+      console.log('RabbitMQ is connected or Sending error:', error);
     } else {
-      console.log('İstek alındı ve RabbitMQ\'ya iletiliyor.');
+      console.log('The Request was received and Sending RabbitMQ');
     }
   });
 
@@ -44,7 +44,9 @@ app.post('/api/queu1', (req, res) => {
     const messageData = JSON.parse(message);
     if (['login_response', 'register_response'].includes(messageData.action)) {
       res.status(500).json(messageData);
-    } 
+    } else{
+      res.status(400).json({ error: 'Invalid transaction.' });
+    }
   });
 });
 
@@ -55,16 +57,19 @@ app.post('/api/queu2', (req, res) => {
 
   rabbitmqService2.sendMessage(messageText, (error: any) => {
     if (error) {
-      console.log('RabbitMQ bağlantı veya gönderme hatası:', error);
+      console.log('RabbitMQ is connected or Sending error:', error);
     } else {
-      console.log('İstek alındı ve RabbitMQ\'ya iletiliyor.');
+      console.log('The Request was received and Sent RabbitMQ ');
     }
   });
   rabbitmqService2.onMessageReceived((message) => {
     const messageData = JSON.parse(message);
     if (['create_response', 'get_response', 'delete_response', 'getAll_response', 'update_response'].includes(messageData.action)) {
       res.status(500).json(messageData);
-    } 
+    }else{
+      res.status(400).json({ error: 'Invalid transaction.' });
+
+    }
   });
 });
 
