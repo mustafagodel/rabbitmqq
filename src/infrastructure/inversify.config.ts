@@ -27,10 +27,10 @@ container.bind<ProductController>(ProductController).to(ProductController);
 container.bind<Product>(Product).to(Product);
 container.bind<ProductRepository>(ProductRepository).to(ProductRepository);
 container.bind<ProductService>(ProductService).to(ProductService);
-container.bind<RabbitMQService>('RabbitMQServiceQueue1').toDynamicValue(() => {
+container.bind<RabbitMQService>('UserRabbitMQServiceQueue').toDynamicValue(() => {
   return new RabbitMQService('amqp://localhost', 'Queue1');
 })
-  container.bind<RabbitMQService>('RabbitMQServiceQueue2').toDynamicValue(() => {
+  container.bind<RabbitMQService>('ProductRabbitMQServiceQueue').toDynamicValue(() => {
     return new RabbitMQService('amqp://localhost', 'Queue2');
   })
   container.bind<RabbitMQService>('RabbitMQServiceQueue3').toDynamicValue(() => {

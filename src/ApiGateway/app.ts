@@ -10,7 +10,7 @@ import { RabbitMQService } from '../infrastructure/RabbitMQService';
 import { ProductController } from '../Product/app/app';
 import { RequestResponseMap } from '../infrastructure/RequestResponseMap';  
 require('dotenv').config();
-
+import jwt from 'jsonwebtoken';
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -22,37 +22,72 @@ app.use(bodyParser.urlencoded({ extended: true }));
 container.get<UserController>(UserController);
 container.get<ProductController>(ProductController);
 const requestResponseMap = container.get<RequestResponseMap>(RequestResponseMap);
-
+const secretKey = process.env.SECRET_KEY as string; 
 app.post('/api', (req, res) => {
   const requestData = req.body;
   const messageText = JSON.stringify(requestData);
 
   const rabbitmqServiceToUse = requestResponseMap.getRequestService(requestData.action);
   if (!rabbitmqServiceToUse) {
-    return res.status(400).json({ rabbitmqServiceToUse});
+    return res.status(400).json({ error: 'Invalid action' });
   }
-  
 
-  rabbitmqServiceToUse.sendMessage(messageText, (error) => {
-    if (error) {
-      console.log('RabbitMQ is connected or Sending error:', error);
-      return res.status(500).json(error);
-    }
-    console.log('The Request was received and Sent RabbitMQ');
-
+  if (requestData.action === 'login' || requestData.action === 'register') {
+    // No token required for 'login' and 'register'
+    rabbitmqServiceToUse.sendMessage(messageText, (error) => {
+      if (error) {
+        console.log('RabbitMQ is connected or Sending error:', error);
+        return res.status(500).json(error);
+      }
+      console.log('The Request was received and Sent RabbitMQ');
 
       rabbitmqServiceToUse.onMessageReceived((message) => {
         const messageData = JSON.parse(message);
-        const validActions = requestResponseMap.getResponseActions(requestData.action);
-  
-        if (validActions.includes(messageData.action)) {
-          res.status(200).json(messageData);
-        } else {
-          res.status(400).json({ error: 'Invalid transaction.' });
+
+        // Check if the response includes a token
+        const userToken = messageData.token;
+
+        if (userToken) {
+          // Continue with the received token for subsequent actions
+          req.headers.authorization = userToken;
         }
+
+        res.status(200).json(messageData);
       });
     });
+  } else {
+    // Token required for other actions
+    const userToken = req.headers.authorization;
+
+    if (userToken && typeof userToken === 'string') {
+      jwt.verify(userToken, secretKey, (err, decoded) => {
+       
+        const user = decoded;
+
+        rabbitmqServiceToUse.sendMessage(messageText, (error) => {
+          if (error) {
+            console.log('RabbitMQ is connected or Sending error:', error);
+            return res.status(500).json(error);
+          }
+          console.log('The Request was received and Sent RabbitMQ');
+
+          rabbitmqServiceToUse.onMessageReceived((message) => {
+            const messageData = JSON.parse(message);
+            res.status(200).json(messageData);
+          });
+        });
+      });
+    } else {
+      res.status(401).json({ error: 'Unauthorized' });
+    }
+  }
 });
+
+
+
+
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
+
+

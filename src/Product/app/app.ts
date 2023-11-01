@@ -14,21 +14,27 @@ export class ProductController {
 
     constructor(
         @inject(ProductService) private productService: ProductService,
-        @inject('RabbitMQServiceQueue2') private rabbitmqService1: RabbitMQService,
+        @inject('ProductRabbitMQServiceQueue') private ProductrabbitmqService: RabbitMQService,
         @inject(ProductApplicationService) private productApplicationService: ProductApplicationService,
     ) {
         this.router = express.Router();
         this.productAppService = productApplicationService;
 
-        this.rabbitmqService1.onMessageReceived((message: string) => {
+        this.ProductrabbitmqService.onMessageReceived((message: string) => {
             this.handleMessage(message);
         });
     }
     
     public async handleMessage(message: string) {
         const messageData = JSON.parse(message);
-        if (messageData.action === 'create') {
-            const createResult = await this.productAppService.createProduct(messageData.name,messageData.price,messageData.stock );
+     
+        await this.functions[messageData.action] &&
+        this.functions[messageData.action](this.productApplicationService, messageData, this.ProductrabbitmqService);
+    }
+       
+    private  functions = {
+        async create(productAppService: ProductApplicationService, messageData: any, rabbitmqService: RabbitMQService) {
+            const createResult = await productAppService.createProduct(messageData.name,messageData.price,messageData.stock );
     
             const responseMessage = {
                 action: 'create_response',
@@ -37,18 +43,16 @@ export class ProductController {
             const responseMessageText = JSON.stringify(responseMessage);
     
      
-            this.rabbitmqService1.sendMessage(responseMessageText, (error: any) => {
+            rabbitmqService.sendMessage(responseMessageText, (error: any) => {
                 if (error) {
                     console.error('RabbitMQ connection or sending error:', error);
                 } else {
                     console.log('The response message has been sent to RabbitMQ.');
                 }
             });
-        
-
-        }
-       else if (messageData.action === 'update') {
-            const createResult = await this.productAppService.updateProduct(
+        },
+        async update(productAppService: ProductApplicationService, messageData: any, rabbitmqService: RabbitMQService) {
+            const createResult = await productAppService.updateProduct(
                 messageData.id,
                 messageData.name,
                 messageData.price,
@@ -62,17 +66,15 @@ export class ProductController {
             const responseMessageText = JSON.stringify(responseMessage);
     
      
-            this.rabbitmqService1.sendMessage(responseMessageText, (error: any) => {
+            rabbitmqService.sendMessage(responseMessageText, (error: any) => {
                 if (error) {
                     console.error('RabbitMQ connection or sending error:', error);
                   } else {
                      console.log('The response message has been sent to RabbitMQ.');
                 }
             });
-        }
-        
-        else if (messageData.action === 'delete') {
-            const createResult = await this.productAppService.deleteProduct(
+        }, async delete(productAppService: ProductApplicationService, messageData: any, rabbitmqService: RabbitMQService) {
+            const createResult = await productAppService.deleteProduct(
                 messageData.id,
             );
     
@@ -83,15 +85,15 @@ export class ProductController {
             const responseMessageText = JSON.stringify(responseMessage);
     
      
-            this.rabbitmqService1.sendMessage(responseMessageText, (error: any) => {
+            rabbitmqService.sendMessage(responseMessageText, (error: any) => {
                 if (error) {
                     console.error('RabbitMQ connection or sending error:', error);
                 } else {
                     console.log('The response message has been sent to RabbitMQ.');
                 }
             });
-        }  else if (messageData.action === 'get') {
-            const createResult = await this.productAppService.getProductById(
+        }, async get(productAppService: ProductApplicationService, messageData: any, rabbitmqService: RabbitMQService) {
+            const createResult = await productAppService.getProductById(
                 messageData.id,
             );
             const responseMessage = {
@@ -101,15 +103,15 @@ export class ProductController {
             const responseMessageText = JSON.stringify(responseMessage);
     
      
-            this.rabbitmqService1.sendMessage(responseMessageText, (error: any) => {
+            rabbitmqService.sendMessage(responseMessageText, (error: any) => {
                 if (error) {
                     console.error('RabbitMQ bağlantı veya gönderme hatası:', error);
                 } else {
                     console.log('Response mesajı RabbitMQ\'ya gönderildi.');
                 }
             });
-        }else if (messageData.action === 'getAll') {
-            const createResult = await this.productAppService.getAllProducts();
+        }, async getAll(productAppService: ProductApplicationService, messageData: any, rabbitmqService: RabbitMQService) {
+            const createResult = await productAppService.getAllProducts();
     
             const responseMessage = {
                 action: 'getAll_response',
@@ -118,7 +120,7 @@ export class ProductController {
             const responseMessageText = JSON.stringify(responseMessage);
     
      
-            this.rabbitmqService1.sendMessage(responseMessageText, (error: any) => {
+            rabbitmqService.sendMessage(responseMessageText, (error: any) => {
                 if (error) {
                     console.error('RabbitMQ bağlantı veya gönderme hatası:', error);
                 } else {
@@ -126,5 +128,5 @@ export class ProductController {
                 }
             });
         }
-    }
+      };
 }

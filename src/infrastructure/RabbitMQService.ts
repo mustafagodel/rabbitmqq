@@ -3,6 +3,7 @@ import { injectable } from 'inversify';
 
 @injectable()
 export class RabbitMQService {
+    [x: string]: any;
     private channel: amqplib.Channel | undefined;
     private isConsuming: boolean = false; 
 

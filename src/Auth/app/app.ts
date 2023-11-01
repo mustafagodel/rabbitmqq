@@ -10,6 +10,10 @@ import * as amqp from 'amqplib/callback_api';
 import  { PasswordService } from '../../infrastructure/PasswordService';
 
 import { RabbitMQService } from '../../infrastructure/RabbitMQService';
+interface ApiResponse<T> {
+    response: T;
+    token: string;
+}
 
 @injectable()
 export class UserController {
@@ -19,54 +23,65 @@ export class UserController {
     constructor(
         @inject(UserService) private userService: UserService,
         @inject(PasswordService) passwordService: PasswordService,
-        @inject('RabbitMQServiceQueue1') private rabbitmqService1: RabbitMQService,
+        @inject('UserRabbitMQServiceQueue') private UserrabbitmqService: RabbitMQService,
         @inject(UserApplicationService) userAppService: UserApplicationService 
     ) {
         this.userAppService = userAppService; 
 
-        this.rabbitmqService1.onMessageReceived((message: string) => {
+        this.UserrabbitmqService.onMessageReceived((message: string) => {
             this.handleMessage(message);
         });
+        
     }
 
 
     public async handleMessage(message: string) {
         const messageData = JSON.parse(message);
+
+        const func = this.functions[messageData.action];
+
+        if(!func) {
+
+            throw new Error("tanımsız method");            
+        }
+
+        return await func(this.userAppService, messageData, this.UserrabbitmqService);
+    }
     
-        if (messageData.action === 'login') {
-            const response = await this.userAppService.loginUser(messageData.username, messageData.password);
+
+    
+    private  functions = {
+        async login(userAppService: UserApplicationService, messageData: any, rabbitmqService: RabbitMQService) {
+            const response = await userAppService.loginUser(messageData.username, messageData.password);
             const responseMessage = {
-                action: 'login_response',
                 response: response,
+                token :response.data,
             };
             const responseMessageText = JSON.stringify(responseMessage);
     
-            this.rabbitmqService1.sendMessage(responseMessageText, (error: any) => {
+            rabbitmqService.sendMessage(responseMessageText, (error: any) => {
                 if (error) {
                     console.error('RabbitMQ bağlantı veya gönderme hatası:', error);
                 } else {
                     console.log('Response mesajı RabbitMQ\'ya gönderildi.');
                 }
             });
-        } else if (messageData.action === 'register') {
-            const registrationResponse = await this.userAppService.registerUser(messageData.username, messageData.password);
+        },
+        async register(userAppService: UserApplicationService, messageData: any, rabbitmqService: RabbitMQService) {
+            const registrationResponse = await userAppService.registerUser(messageData.username, messageData.password);
             console.log('Register response:', registrationResponse);
 
             const responseMessage = {
-                action: 'register_response',
                 response: registrationResponse,
             };
             const responseMessageText = JSON.stringify(responseMessage);
-    
-     
-            this.rabbitmqService1.sendMessage(responseMessageText, (error: any) => {
+            rabbitmqService.sendMessage(responseMessageText, (error: any) => {
                 if (error) {
-                    console.error('RabbitMQ is connected or Sending error:', error);
+                    console.error('RabbitMQ bağlantı veya gönderme hatası:', error);
                 } else {
-                    console.log('The response message has been sent to RabbitMQ. ');
+                    console.log('Response mesajı RabbitMQ\'ya gönderildi.');
                 }
             });
-        }
-    }
-    
+        },
+      };
 }

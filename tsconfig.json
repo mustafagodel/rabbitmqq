@@ -16,6 +16,7 @@
     "baseUrl": "./", 
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
+    "noImplicitAny": false,
     "paths": {
       
     },
