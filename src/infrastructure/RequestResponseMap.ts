@@ -1,16 +1,14 @@
-
 import { RabbitMQService } from './RabbitMQService';
 import { inject, injectable } from 'inversify';
 
 @injectable()
 export class RequestResponseMap {
   private requestMap: Record<string, RabbitMQService> = {};
-  private responseMap: Record<string, string[]> = {};
+
   constructor(
     @inject('UserRabbitMQServiceQueue') UserrabbitmqService: RabbitMQService,
     @inject('ProductRabbitMQServiceQueue') ProductrabbitmqService2: RabbitMQService
   ) {
-   
     this.requestMap = {
       'login': UserrabbitmqService,
       'register': UserrabbitmqService,
@@ -20,8 +18,11 @@ export class RequestResponseMap {
       'getAll': ProductrabbitmqService2,
       'update': ProductrabbitmqService2,
     };
+  }
 
-    
+
+  requiresToken(action: string): boolean {
+    return action !== 'login' && action !== 'register';
   }
 
   getRequestService(action: string): RabbitMQService | undefined {

@@ -23,66 +23,52 @@ container.get<UserController>(UserController);
 container.get<ProductController>(ProductController);
 const requestResponseMap = container.get<RequestResponseMap>(RequestResponseMap);
 const secretKey = process.env.SECRET_KEY as string; 
-app.post('/api', (req, res) => {
-  const requestData = req.body;
-  const messageText = JSON.stringify(requestData);
+app.post('/api', async (req, res) => {
+  try {
+    const requestData = req.body;
+    const messageText = JSON.stringify(requestData);
 
-  const rabbitmqServiceToUse = requestResponseMap.getRequestService(requestData.action);
-  if (!rabbitmqServiceToUse) {
-    return res.status(400).json({ error: 'Invalid action' });
-  }
+    const rabbitmqServiceToUse = requestResponseMap.getRequestService(requestData.action);
 
-  if (requestData.action === 'login' || requestData.action === 'register') {
-
-    rabbitmqServiceToUse.sendMessage(messageText, (error) => {
-      if (error) {
-        console.log('RabbitMQ is connected or Sending error:', error);
-        return res.status(500).json(error);
-      }
-      console.log('The Request was received and Sent RabbitMQ');
-
-      rabbitmqServiceToUse.onMessageReceived((message) => {
-        const messageData = JSON.parse(message);
-
-        
-        const userToken = messageData.token;
-
-        if (userToken) {
-          
-          req.headers.authorization = userToken;
-        }
-
-        res.status(200).json(messageData);
-      });
-    });
-  } else {
-  
-    const userToken = req.headers.authorization;
-
-    if (userToken && typeof userToken === 'string') {
-      jwt.verify(userToken, secretKey, (err, decoded) => {
-       
-        const user = decoded;
-
-        rabbitmqServiceToUse.sendMessage(messageText, (error) => {
-          if (error) {
-            console.log('RabbitMQ is connected or Sending error:', error);
-            return res.status(500).json(error);
-          }
-          console.log('The Request was received and Sent RabbitMQ');
-
-          rabbitmqServiceToUse.onMessageReceived((message) => {
-            const messageData = JSON.parse(message);
-            res.status(200).json(messageData);
-          });
-        });
-      });
-    } else {
-      res.status(401).json({ error: 'Unauthorized' });
+    if (!rabbitmqServiceToUse) {
+      return res.status(400).json({ error: 'Invalid action' });
     }
+
+    if (requestResponseMap.requiresToken(requestData.action)) {
+      const userToken = req.headers.authorization;
+
+      if (!userToken || typeof userToken !== 'string') {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+
+      const decoded = await jwt.verify(userToken, secretKey);
+
+      const user = decoded;
+
+      await sendMessageAndHandleResponse(rabbitmqServiceToUse, messageText, res);
+    } else {
+      await sendMessageAndHandleResponse(rabbitmqServiceToUse, messageText, res);
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
+async function sendMessageAndHandleResponse(rabbitmqService, messageText, res) {
+  try {
+    await rabbitmqService.sendMessage(messageText);
+    console.log('The Request was received and Sent to RabbitMQ');
+
+    rabbitmqService.onMessageReceived((message) => {
+      const messageData = JSON.parse(message);
+      res.status(200).json(messageData);
+    });
+  } catch (error) {
+    console.error('RabbitMQ is connected or Sending error:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+}
 
 
 
