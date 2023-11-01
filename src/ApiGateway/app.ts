@@ -26,6 +26,21 @@ const secretKey = process.env.SECRET_KEY as string;
 
 
 
+const sendResponseToClient = (res, rabbitmqServiceToUse, messageText) => {
+  rabbitmqServiceToUse.sendMessage(messageText, (error) => {
+    if (error) {
+      console.log('RabbitMQ is connected or Sending error:', error);
+      return res.status(500).json(error);
+    }
+    console.log('The Request was received and Sent to RabbitMQ');
+
+    rabbitmqServiceToUse.onMessageReceived((message) => {
+      const messageData = JSON.parse(message);
+      res.status(200).json(messageData);
+    });
+  });
+};
+
 app.post('/api', (req, res) => {
   const requestData = req.body;
   const messageText = JSON.stringify(requestData);
@@ -36,40 +51,20 @@ app.post('/api', (req, res) => {
   }
 
   if (!requestResponseMap.requiresToken(requestData.action)) {
-    rabbitmqServiceToUse.sendMessage(messageText, (error) => {
-      if (error) {
-        console.log('RabbitMQ is connected or Sending error:', error);
-        return res.status(500).json(error);
-      }
-      console.log('The Request was received and Sent to RabbitMQ');
-
-      rabbitmqServiceToUse.onMessageReceived((message) => {
-        const messageData = JSON.parse(message);
-        res.status(200).json(messageData);
-      });
-    });
+    sendResponseToClient(res, rabbitmqServiceToUse, messageText);
   } else {
     const userToken = req.headers.authorization;
     if (userToken && typeof userToken === 'string') {
       jwt.verify(userToken, secretKey, (err, decoded) => {
         const user = decoded;
-        rabbitmqServiceToUse.sendMessage(messageText, (error) => {
-          if (error) {
-            console.log('RabbitMQ is connected or Sending error:', error);
-            return res.status(500).json(error);
-          }
-          console.log('The Request was received and Sent RabbitMQ');
-          rabbitmqServiceToUse.onMessageReceived((message) => {
-            const messageData = JSON.parse(message);
-            res.status(200).json(messageData);
-          });
-        });
+        sendResponseToClient(res, rabbitmqServiceToUse, messageText);
       });
     } else {
       res.status(401).json({ error: 'Unauthorized' });
     }
   }
 });
+
 
 
 app.listen(port, () => {

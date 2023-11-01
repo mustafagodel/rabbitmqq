@@ -27,16 +27,22 @@ export class ProductController {
     
     public async handleMessage(message: string) {
         const messageData = JSON.parse(message);
-     
+
         const func = this.functions[messageData.action];
 
         if(!func) {
 
             throw new Error("undefined method");            
+         
         }
 
-        return await func(this.productService, messageData, this.productApplicationService);
+        return await func(this.productApplicationService, messageData, this.ProductrabbitmqService);
     }
+
+
+
+
+
        
     private  functions = {
         async create(productAppService: ProductApplicationService, messageData: any, rabbitmqService: RabbitMQService) {
