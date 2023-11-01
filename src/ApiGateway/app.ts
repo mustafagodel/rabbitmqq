@@ -33,7 +33,7 @@ app.post('/api', (req, res) => {
   }
 
   if (requestData.action === 'login' || requestData.action === 'register') {
-    // No token required for 'login' and 'register'
+
     rabbitmqServiceToUse.sendMessage(messageText, (error) => {
       if (error) {
         console.log('RabbitMQ is connected or Sending error:', error);
@@ -44,11 +44,11 @@ app.post('/api', (req, res) => {
       rabbitmqServiceToUse.onMessageReceived((message) => {
         const messageData = JSON.parse(message);
 
-        // Check if the response includes a token
+        
         const userToken = messageData.token;
 
         if (userToken) {
-          // Continue with the received token for subsequent actions
+          
           req.headers.authorization = userToken;
         }
 
@@ -56,7 +56,7 @@ app.post('/api', (req, res) => {
       });
     });
   } else {
-    // Token required for other actions
+  
     const userToken = req.headers.authorization;
 
     if (userToken && typeof userToken === 'string') {
