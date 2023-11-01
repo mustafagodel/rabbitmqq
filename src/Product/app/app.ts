@@ -28,8 +28,14 @@ export class ProductController {
     public async handleMessage(message: string) {
         const messageData = JSON.parse(message);
      
-        await this.functions[messageData.action] &&
-        this.functions[messageData.action](this.productApplicationService, messageData, this.ProductrabbitmqService);
+        const func = this.functions[messageData.action];
+
+        if(!func) {
+
+            throw new Error("undefined method");            
+        }
+
+        return await func(this.productService, messageData, this.productApplicationService);
     }
        
     private  functions = {

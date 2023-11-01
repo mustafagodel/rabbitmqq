@@ -42,7 +42,8 @@ export class UserController {
 
         if(!func) {
 
-            throw new Error("tanımsız method");            
+            throw new Error("undefined method");            
+         
         }
 
         return await func(this.userAppService, messageData, this.UserrabbitmqService);
@@ -55,7 +56,6 @@ export class UserController {
             const response = await userAppService.loginUser(messageData.username, messageData.password);
             const responseMessage = {
                 response: response,
-                token :response.data,
             };
             const responseMessageText = JSON.stringify(responseMessage);
     
