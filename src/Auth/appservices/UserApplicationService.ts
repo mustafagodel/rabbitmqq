@@ -38,7 +38,7 @@ export class UserApplicationService {
         
             const token = jwt.sign({ username }, secretKey);
             console.log(`Token after successful login: ${token}`);
-            return new ApiResponse(0, 'Login successful', { token });
+            return new ApiResponse(0, 'Login successful', message);
         } else {
             return new ApiResponse(1, 'Incorrect Username or Password', false);
         }

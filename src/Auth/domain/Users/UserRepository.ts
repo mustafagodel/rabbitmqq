@@ -15,23 +15,20 @@ export class UserRepository {
         this.passwordService = passwordService;
     }
    
-
-    async findByUsername(username: string, password: string): Promise<{ success: boolean; user?: User }> {
+    async findByUsername(username: string, password: string): Promise<{ success: boolean; user?: any }> {
         if (!this.collection) {
             return { success: false };
         }
-
+    
         try {
             const hashedPassword = this.passwordService.hashPassword(password);
             const userDoc = await this.collection.findOne({ username, password: hashedPassword });
-
+    
             if (!userDoc) {
                 return { success: false };
             }
-
-            const user: User = new User(userDoc.username, userDoc.password);
-
-            return { success: true, user };
+    
+            return { success: true, user: userDoc };
         } catch (error) {
             console.error('MongoDB sorgusu hatası:', error);
             throw error;
