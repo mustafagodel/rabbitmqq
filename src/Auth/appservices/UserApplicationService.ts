@@ -6,7 +6,6 @@ import {ApiResponse} from '../../infrastructure/ApiResponse';
 
 
 require('dotenv').config();
-
 @injectable()
 export class UserApplicationService {
    
@@ -38,7 +37,7 @@ export class UserApplicationService {
         
             const token = jwt.sign({ username }, secretKey);
             console.log(`Token after successful login: ${token}`);
-            return new ApiResponse(0, 'Login successful', message);
+            return new ApiResponse(0, 'Login successful', { token });
         } else {
             return new ApiResponse(1, 'Incorrect Username or Password', false);
         }

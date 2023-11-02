@@ -33,6 +33,7 @@ export class OrderController {
         return await func(this.orderAppService, messageData, this.OrderrabbitmqService);
     }
 
+
     private functions = {
         async create(orderAppService: OrderApplicationService, messageData: any, rabbitmqService: RabbitMQService) {
             const response = await orderAppService.createOrder(
