@@ -35,7 +35,7 @@ export class OrderController {
 
 
     private functions = {
-        async create(orderAppService: OrderApplicationService, messageData: any, rabbitmqService: RabbitMQService) {
+        async createOrder(orderAppService: OrderApplicationService, messageData: any, rabbitmqService: RabbitMQService) {
             const response = await orderAppService.createOrder(
                 messageData.orderId,
                 messageData.items,
@@ -54,7 +54,7 @@ export class OrderController {
                 }
             });
         },
-        async update(orderAppService: OrderApplicationService, messageData: any, rabbitmqService: RabbitMQService) {
+        async updateOrder(orderAppService: OrderApplicationService, messageData: any, rabbitmqService: RabbitMQService) {
             const response = await orderAppService.updateOrder(
                 messageData.id,
                 messageData.orderId,
@@ -75,7 +75,7 @@ export class OrderController {
             });
         },
         
-        async delete(orderAppService: OrderApplicationService, messageData: any, rabbitmqService: RabbitMQService) {
+        async deleteOrder(orderAppService: OrderApplicationService, messageData: any, rabbitmqService: RabbitMQService) {
             const response = await orderAppService.deleteOrder(messageData.id);
             const responseMessage = {
                 response: response,

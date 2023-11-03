@@ -7,16 +7,22 @@ export class RequestResponseMap {
 
   constructor(
     @inject('UserRabbitMQServiceQueue') UserrabbitmqService: RabbitMQService,
-    @inject('ProductRabbitMQServiceQueue') ProductrabbitmqService2: RabbitMQService
+    @inject('ProductRabbitMQServiceQueue') ProductrabbitmqService: RabbitMQService,
+    @inject('OrderRabbitMQServiceQueue') OrderrabbitmqService: RabbitMQService
   ) {
     this.requestMap = {
       'login': UserrabbitmqService,
       'register': UserrabbitmqService,
-      'create': ProductrabbitmqService2,
-      'get': ProductrabbitmqService2,
-      'delete': ProductrabbitmqService2,
-      'getAll': ProductrabbitmqService2,
-      'update': ProductrabbitmqService2,
+      'create': ProductrabbitmqService,
+      'get': ProductrabbitmqService,
+      'delete': ProductrabbitmqService,
+      'getAll': ProductrabbitmqService,
+      'update': ProductrabbitmqService,
+      'createOrder':OrderrabbitmqService,
+      'updateOrder':OrderrabbitmqService,
+      'deleteOrder':OrderrabbitmqService,
+      'getOrder':OrderrabbitmqService,
+      'getAllOrders':OrderrabbitmqService,
     };
   }
 

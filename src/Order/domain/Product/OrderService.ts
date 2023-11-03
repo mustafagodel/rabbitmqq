@@ -1,43 +1,55 @@
 
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { Order } from './Order';
+import { OrderRepository } from './OrderRepository';
 
 @injectable()
 export class OrderService {
     private orders: Order[] = [];
+    constructor(@inject(OrderRepository) public OrderRepository: OrderRepository) {
+    
+    }
 
-    async createOrder(orderId: number, items: string[], price: number): Promise<Order> {
+    async createOrder(orderId: number, items: string[], price: number): Promise<Order | undefined> {
         const order = new Order(orderId, items, price);
-        this.orders.push(order);
-        return order;
+        const result = await this.OrderRepository.add(order);
+
+        if (result) {
+           
+            return order;
+        }
+
+        return undefined;
     }
 
     async updateOrder(id: string, orderId: number, items: string[], price: number): Promise<Order | undefined> {
-        const existingOrder = this.orders.find((order) => order.id === id);
-        if (existingOrder) {
+        const order = new Order(orderId, items, price);
+        const result = await this.OrderRepository.update(id, order);
 
-            existingOrder.orderId = orderId;
-            existingOrder.items = items;
-            existingOrder.price = price;
-            return existingOrder;
+        if (result.success) {
+      
+            return order;
         }
+
         return undefined;
     }
 
     async deleteOrder(id: string): Promise<boolean> {
-        const index = this.orders.findIndex((order) => order.id === id);
-        if (index !== -1) {
-            this.orders.splice(index, 1);
-            return true;
+        const result = await this.OrderRepository.delete(id);
+
+        if (result) {
+          
+            return result;
         }
+
         return false;
     }
 
     async getOrderById(id: string): Promise<Order | undefined> {
-        return this.orders.find((order) => order.id === id);
+        return this.OrderRepository.findById(id);
     }
 
     async getAllOrders(): Promise<Order[]> {
-        return this.orders;
+        return this.OrderRepository.findAll();
     }
 }

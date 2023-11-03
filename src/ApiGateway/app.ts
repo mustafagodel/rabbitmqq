@@ -4,6 +4,7 @@ import bodyParser from 'body-parser';
 import { Container } from 'inversify';
 import configureContainer from '../infrastructure/inversify.config';
 import { UserController } from '../Auth/app/app.js';
+import { OrderController } from '../Order/app/app';
 import Middleware from '../middleware/ExecptionMiddleware';
 import PasswordService from '../infrastructure/PasswordService';
 import { RabbitMQService } from '../infrastructure/RabbitMQService'; 
@@ -21,6 +22,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 container.get<UserController>(UserController);
 container.get<ProductController>(ProductController);
+container.get<OrderController>(OrderController);
 const requestResponseMap = container.get<RequestResponseMap>(RequestResponseMap);
 const secretKey = process.env.SECRET_KEY as string; 
 
