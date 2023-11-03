@@ -6,8 +6,8 @@ import { ApiResponse } from '../../infrastructure/ApiResponse';
 export class ProductApplicationService {
     [x: string]: any;
     constructor(private productService: ProductService) {}
-    async createProduct(name: string, price: number, stock: number): Promise<ApiResponse<any>> {
-        const createdProduct = await this.productService.createProduct(name, price, stock);
+    async createProduct(type:string,name: string, price: number, stock: number): Promise<ApiResponse<any>> {
+        const createdProduct = await this.productService.createProduct(type,name, price, stock);
 
         if (createdProduct) {
             return new ApiResponse(0, 'Product created successfully', createdProduct);
@@ -16,8 +16,8 @@ export class ProductApplicationService {
         }
     }
 
-    async updateProduct(id: string, name: string, price: number, stock: number): Promise<ApiResponse<any>> {
-        const updatedProduct = await this.productService.updateProduct(id, name, price, stock);
+    async updateProduct(id: string, type:string,name: string, price: number, stock: number): Promise<ApiResponse<any>> {
+        const updatedProduct = await this.productService.updateProduct(id,type,name, price, stock);
 
         if (updatedProduct) {
             return new ApiResponse(0, 'Product updated successfully', updatedProduct);

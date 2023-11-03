@@ -6,9 +6,9 @@ import { Product } from './Product';
 export class ProductService {
     constructor(@inject(ProductRepository) private productRepository: ProductRepository) {}
 
-    async createProduct(name: string, price: number, stock: number): Promise<Product | undefined> {
+    async createProduct(type:string,name: string, price: number, stock: number): Promise<Product | undefined> {
 
-        const newProduct = new Product(name, price, stock);
+        const newProduct = new Product(type,name, price, stock);
         const result = await this.productRepository.add(newProduct);
 
         if (result.success) {
@@ -19,9 +19,9 @@ export class ProductService {
         return undefined;
     }
 
-    async updateProduct(id: string, name: string, price: number, stock: number): Promise<Product | undefined> {
+    async updateProduct(id: string,type:string, name: string, price: number, stock: number): Promise<Product | undefined> {
 
-        const updatedProduct = new Product(name, price, stock);
+        const updatedProduct = new Product(type,name, price, stock);
         const result = await this.productRepository.update(id, updatedProduct);
 
         if (result.success) {

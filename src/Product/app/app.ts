@@ -44,9 +44,9 @@ export class ProductController {
 
 
        
-    private  functions = {
+    public  functions = {
         async create(productAppService: ProductApplicationService, messageData: any, rabbitmqService: RabbitMQService) {
-            const createResult = await productAppService.createProduct(messageData.name,messageData.price,messageData.stock );
+            const createResult = await productAppService.createProduct(messageData.type,messageData.name,messageData.price,messageData.stock );
     
             const responseMessage = {
                 action: 'create_response',
@@ -66,6 +66,7 @@ export class ProductController {
         async update(productAppService: ProductApplicationService, messageData: any, rabbitmqService: RabbitMQService) {
             const createResult = await productAppService.updateProduct(
                 messageData.id,
+                messageData.type,
                 messageData.name,
                 messageData.price,
                 messageData.stock
@@ -141,4 +142,23 @@ export class ProductController {
             });
         }
       };
+      async getname(productAppService: ProductApplicationService, messageData: any, rabbitmqService: RabbitMQService) {
+        const createResult = await productAppService.getProductByName(
+          messageData.name, 
+        );
+      
+        const responseMessage = {
+          action: 'get_response',
+          response: createResult,
+        };
+        const responseMessageText = JSON.stringify(responseMessage);
+      
+        rabbitmqService.sendMessage(responseMessageText, (error: any) => {
+          if (error) {
+            console.error('RabbitMQ bağlantı veya gönderme hatası:', error);
+          } else {
+            console.log('Response mesajı RabbitMQ\'ya gönderildi.');
+          }
+        });
+      }
 }

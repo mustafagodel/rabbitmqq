@@ -23,6 +23,7 @@ export class RequestResponseMap {
       'deleteOrder':OrderrabbitmqService,
       'getOrder':OrderrabbitmqService,
       'getAllOrders':OrderrabbitmqService,
+      'getname':OrderrabbitmqService,
     };
   }
 

@@ -10,7 +10,7 @@ export class OrderService {
     
     }
 
-    async createOrder(orderId: number, items: string[], price: number): Promise<Order | undefined> {
+    async createOrder(orderId: string, items: string[], price: number): Promise<Order | undefined> {
         const order = new Order(orderId, items, price);
         const result = await this.OrderRepository.add(order);
 
@@ -22,7 +22,7 @@ export class OrderService {
         return undefined;
     }
 
-    async updateOrder(id: string, orderId: number, items: string[], price: number): Promise<Order | undefined> {
+    async updateOrder(id: string, orderId: string, items: string[], price: number): Promise<Order | undefined> {
         const order = new Order(orderId, items, price);
         const result = await this.OrderRepository.update(id, order);
 
@@ -39,7 +39,7 @@ export class OrderService {
 
         if (result) {
           
-            return result;
+            return true;
         }
 
         return false;

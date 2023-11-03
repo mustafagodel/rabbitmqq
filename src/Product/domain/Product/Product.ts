@@ -4,5 +4,5 @@ import { injectable } from 'inversify';
 export class Product {
     id: string | undefined;
 
-    constructor(public name: string, public price: number, public stock: number) {}
+    constructor(public type:string ,public name: string, public price: number, public stock: number) {}
 }
