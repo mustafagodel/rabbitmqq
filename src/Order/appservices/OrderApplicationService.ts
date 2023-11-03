@@ -1,12 +1,13 @@
 import { injectable } from 'inversify';
 import { OrderService } from '../../Order/domain/Product/OrderService';
 import { ApiResponse } from '../../infrastructure/ApiResponse';
+import { OrderItem } from '../domain/Product/Order';
 
 @injectable()
 export class OrderApplicationService {
     constructor(private orderService: OrderService) {}
 
-    async createOrder(orderId: string, items: string[], price: number): Promise<ApiResponse<any>> {
+    async createOrder(orderId: string, items: OrderItem[], price: number): Promise<ApiResponse<any>> {
         const createdOrder = await this.orderService.createOrder(orderId, items, price);
 
         if (createdOrder) {
@@ -16,7 +17,7 @@ export class OrderApplicationService {
         }
     }
 
-    async updateOrder(id: string, orderId: string, items: string[], price: number): Promise<ApiResponse<any>> {
+    async updateOrder(id: string, orderId: string, items: OrderItem[], price: number): Promise<ApiResponse<any>> {
         const updatedOrder = await this.orderService.updateOrder(id, orderId, items, price);
 
         if (updatedOrder) {

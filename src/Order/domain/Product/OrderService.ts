@@ -1,6 +1,6 @@
 
 import { inject, injectable } from 'inversify';
-import { Order } from './Order';
+import { Order, OrderItem } from './Order';
 import { OrderRepository } from './OrderRepository';
 
 @injectable()
@@ -10,7 +10,7 @@ export class OrderService {
     
     }
 
-    async createOrder(orderId: string, items: string[], price: number): Promise<Order | undefined> {
+    async createOrder(orderId: string, items: OrderItem[], price: number): Promise<Order | undefined> {
         const order = new Order(orderId, items, price);
         const result = await this.OrderRepository.add(order);
 
@@ -22,7 +22,7 @@ export class OrderService {
         return undefined;
     }
 
-    async updateOrder(id: string, orderId: string, items: string[], price: number): Promise<Order | undefined> {
+    async updateOrder(id: string, orderId: string, items: OrderItem[], price: number): Promise<Order | undefined> {
         const order = new Order(orderId, items, price);
         const result = await this.OrderRepository.update(id, order);
 
