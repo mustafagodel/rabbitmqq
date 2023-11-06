@@ -23,10 +23,10 @@ export class OrderRepository {
             const result = await this.collection!.insertOne(order);
             if (result.acknowledged) {
                 return { success: true };
-            } else {
+            } 
                 console.error('The insertion operation failed:', result.acknowledged);
                 return { success: false };
-            }
+            
         } catch (error) {
             console.error('MongoDB insertion error:', error);
             return { success: false };
@@ -39,10 +39,10 @@ export class OrderRepository {
             const result = await this.collection!.updateOne({ _id: new ObjectId(id) }, { $set: order });
             if (result.modifiedCount && result.modifiedCount > 0) {
                 return { success: true };
-            } else {
+            } 
                 console.error('The update process failed:', result);
                 return { success: false };
-            }
+            
         } catch (error) {
             console.error('MongoDB update error:', error);
             return { success: false };
@@ -54,10 +54,10 @@ export class OrderRepository {
             const result = await this.collection!.deleteOne({ _id: new ObjectId(id) });
             if (result.deletedCount && result.deletedCount > 0) {
                 return { success: true };
-            } else {
+            } 
                 console.error('The deletion process failed:', result);
                 return { success: false };
-            }
+            
         } catch (error) {
             console.error('MongoDB deletion error:', error);
             return { success: false };
@@ -70,13 +70,13 @@ export class OrderRepository {
         }
 
         try {
-            const OrderDoc = await this.collection.findOne({ _id: new ObjectId(id) });
+            const orderMassage = await this.collection.findOne({ _id: new ObjectId(id) });
 
-            if (!OrderDoc) {
+            if (!orderMassage) {
                 return undefined;
             }
-            const order = new Order(OrderDoc.orderId, OrderDoc.items, OrderDoc.price);
-            order.id = OrderDoc._id.toString();
+            const order = new Order(orderMassage.orderId, orderMassage.items, orderMassage.price);
+            order.id = orderMassage._id.toString();
 
             return order;
         } catch (error) {
@@ -91,10 +91,10 @@ export class OrderRepository {
         }
 
         try {
-            const OrderDoc = await this.collection.find({}).toArray();
-            const order: Order[] = OrderDoc.map((OrderDoc) => {
-                const order = new Order(OrderDoc.orderId, OrderDoc.items, OrderDoc.price);
-                order.id = OrderDoc._id.toString();
+            const orderMassage = await this.collection.find({}).toArray();
+            const order: Order[] = orderMassage.map((orderMassage) => {
+                const order = new Order(orderMassage.orderId, orderMassage.items, orderMassage.price);
+                order.id = orderMassage._id.toString();
                 return order;
             });
 

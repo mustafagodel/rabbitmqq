@@ -21,7 +21,7 @@ export class OrderController {
         });
     }
 
-    public async handleMessage(message: string) {
+    public async handleMessage(message: string) { 
         const messageData = JSON.parse(message);
 
         const func = this.functions[messageData.action];
@@ -49,9 +49,9 @@ export class OrderController {
             rabbitmqService.sendMessage(responseMessageText, (error: any) => {
                 if (error) {
                     console.error('RabbitMQ connection or sending error:', error);
-                } else {
+                } 
                     console.log('Response message has been sent to RabbitMQ.');
-                }
+                
             });
         },
         async updateOrder(orderAppService: OrderApplicationService, messageData: any, rabbitmqService: RabbitMQService) {
@@ -69,9 +69,9 @@ export class OrderController {
             rabbitmqService.sendMessage(responseMessageText, (error: any) => {
                 if (error) {
                     console.error('RabbitMQ connection or sending error:', error);
-                } else {
+                } 
                     console.log('Response message has been sent to RabbitMQ.');
-                }
+                
             });
         },
         
@@ -85,9 +85,9 @@ export class OrderController {
             rabbitmqService.sendMessage(responseMessageText, (error: any) => {
                 if (error) {
                     console.error('RabbitMQ connection or sending error:', error);
-                } else {
+                } 
                     console.log('Response message has been sent to RabbitMQ.');
-                }
+                
             });
         },
         
@@ -101,9 +101,9 @@ export class OrderController {
             rabbitmqService.sendMessage(responseMessageText, (error: any) => {
                 if (error) {
                     console.error('RabbitMQ connection or sending error:', error);
-                } else {
+                } 
                     console.log('Response message has been sent to RabbitMQ.');
-                }
+                
             });
         },
         
@@ -117,9 +117,9 @@ export class OrderController {
             rabbitmqService.sendMessage(responseMessageText, (error: any) => {
                 if (error) {
                     console.error('RabbitMQ connection or sending error:', error);
-                } else {
+                } 
                     console.log('Response message has been sent to RabbitMQ.');
-                }
+                
             });
         }
     };

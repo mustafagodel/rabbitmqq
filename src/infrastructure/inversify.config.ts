@@ -20,6 +20,7 @@ import { OrderService } from '../Order/domain/Product/OrderService';
 import { OrderApplicationService } from '../Order/appservices/OrderApplicationService';  
 import { OrderController } from '../Order/app/app';  
 
+
 const configureContainer = (container: Container) => {
 container.bind<MongoDBConnector>(MongoDBConnector).to(MongoDBConnector);
 container.bind<UserRepository>(UserRepository).to(UserRepository);
@@ -32,6 +33,8 @@ container.bind<ProductController>(ProductController).to(ProductController);
 container.bind<Product>(Product).to(Product);
 container.bind<ProductRepository>(ProductRepository).to(ProductRepository);
 container.bind<ProductService>(ProductService).to(ProductService);
+
+
 
 container.bind<Order>(Order).to(Order);
 container.bind<OrderRepository>(OrderRepository).to(OrderRepository);

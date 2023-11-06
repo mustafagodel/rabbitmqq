@@ -18,9 +18,9 @@ export class UserApplicationService {
  
         if (message) {
         return new ApiResponse(0, 'User added successfully', message);
-        }else {
-            return new ApiResponse(0, 'No user added', message);
         }
+         return new ApiResponse(0, 'No user added', message);
+        
     }
 
     async loginUser(username: string, password: string): Promise<ApiResponse<{ token: string } | any>> {
@@ -38,9 +38,9 @@ export class UserApplicationService {
             const token = jwt.sign({ username }, secretKey);
             console.log(`Token after successful login: ${token}`);
             return new ApiResponse(0, 'Login successful', { token });
-        } else {
+        } 
             return new ApiResponse(1, 'Incorrect Username or Password', false);
-        }
+        
         
         
     }

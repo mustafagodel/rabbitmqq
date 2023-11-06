@@ -6,13 +6,13 @@ import { OrderRepository } from './OrderRepository';
 @injectable()
 export class OrderService {
     private orders: Order[] = [];
-    constructor(@inject(OrderRepository) public OrderRepository: OrderRepository) {
+    constructor(@inject(OrderRepository) public orderRepository: OrderRepository) {
     
     }
 
     async createOrder(orderId: string, items: OrderItem[], price: number): Promise<Order | undefined> {
         const order = new Order(orderId, items, price);
-        const result = await this.OrderRepository.add(order);
+        const result = await this.orderRepository.add(order);
 
         if (result) {
            
@@ -24,7 +24,7 @@ export class OrderService {
 
     async updateOrder(id: string, orderId: string, items: OrderItem[], price: number): Promise<Order | undefined> {
         const order = new Order(orderId, items, price);
-        const result = await this.OrderRepository.update(id, order);
+        const result = await this.orderRepository.update(id, order);
 
         if (result.success) {
       
@@ -35,7 +35,7 @@ export class OrderService {
     }
 
     async deleteOrder(id: string): Promise<boolean> {
-        const result = await this.OrderRepository.delete(id);
+        const result = await this.orderRepository.delete(id);
 
         if (result) {
           
@@ -46,10 +46,10 @@ export class OrderService {
     }
 
     async getOrderById(id: string): Promise<Order | undefined> {
-        return this.OrderRepository.findById(id);
+        return this.orderRepository.findById(id);
     }
 
     async getAllOrders(): Promise<Order[]> {
-        return this.OrderRepository.findAll();
+        return this.orderRepository.findAll();
     }
 }

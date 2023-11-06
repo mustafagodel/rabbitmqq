@@ -35,20 +35,18 @@ export class UserController {
     }
 
 
-    public async handleMessage(message: string) {
+    public async handleMessage(message: string,) {
         const messageData = JSON.parse(message);
 
         const func = this.functions[messageData.action];
 
         if(!func) {
-
             throw new Error("undefined method");            
-         
         }
-
         return await func(this.userAppService, messageData, this.UserrabbitmqService);
     }
-    
+ 
+        
 
     
     private  functions = {
@@ -62,9 +60,9 @@ export class UserController {
             rabbitmqService.sendMessage(responseMessageText, (error: any) => {
                 if (error) {
                     console.error('RabbitMQ bağlantı veya gönderme hatası:', error);
-                } else {
+                } 
                     console.log('Response mesajı RabbitMQ\'ya gönderildi.');
-                }
+                
             });
         },
         async register(userAppService: UserApplicationService, messageData: any, rabbitmqService: RabbitMQService) {

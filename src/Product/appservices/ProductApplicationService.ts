@@ -11,9 +11,9 @@ export class ProductApplicationService {
 
         if (createdProduct) {
             return new ApiResponse(0, 'Product created successfully', createdProduct);
-        } else {
+        } 
             return new ApiResponse(1, 'Failed to create product', null);
-        }
+        
     }
 
     async updateProduct(id: string, type:string,name: string, price: number, stock: number): Promise<ApiResponse<any>> {
@@ -21,9 +21,9 @@ export class ProductApplicationService {
 
         if (updatedProduct) {
             return new ApiResponse(0, 'Product updated successfully', updatedProduct);
-        } else {
+        } 
             return new ApiResponse(1, 'Failed to update product', null);
-        }
+        
     }
 
     async deleteProduct(id: string): Promise<ApiResponse<any>> {
@@ -31,9 +31,9 @@ export class ProductApplicationService {
 
         if (result) {
             return new ApiResponse(0, 'Product deleted successfully', true);
-        } else {
+        } 
             return new ApiResponse(1, 'Failed to delete product', false);
-        }
+        
     }
 
     async getProductById(id: string): Promise<ApiResponse<any>> {
@@ -41,9 +41,9 @@ export class ProductApplicationService {
 
         if (product) {
             return new ApiResponse(0, 'Product retrieved successfully', product);
-        } else {
+        } 
             return new ApiResponse(1, 'Product not found', null);
-        }
+        
     }
 
     async getAllProducts(): Promise<ApiResponse<any>> {
@@ -51,8 +51,8 @@ export class ProductApplicationService {
 
         if (products.length > 0) {
             return new ApiResponse(0, 'Products retrieved successfully', products);
-        } else {
+        } 
             return new ApiResponse(1, 'No products found', []);
-        }
+        
     }
 }

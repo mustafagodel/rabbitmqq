@@ -12,9 +12,9 @@ export class OrderApplicationService {
 
         if (createdOrder) {
             return new ApiResponse(0, 'Order created successfully', createdOrder);
-        } else {
+        } 
             return new ApiResponse(1, 'Failed to create order', null);
-        }
+        
     }
 
     async updateOrder(id: string, orderId: string, items: OrderItem[], price: number): Promise<ApiResponse<any>> {
@@ -22,9 +22,9 @@ export class OrderApplicationService {
 
         if (updatedOrder) {
             return new ApiResponse(0, 'Order updated successfully', updatedOrder);
-        } else {
+        } 
             return new ApiResponse(1, 'Failed to update order', null);
-        }
+        
     }
 
     async deleteOrder(id: string): Promise<ApiResponse<any>> {
@@ -32,9 +32,9 @@ export class OrderApplicationService {
 
         if (result) {
             return new ApiResponse(0, 'Order deleted successfully', true);
-        } else {
+        } 
             return new ApiResponse(1, 'Failed to delete order', false);
-        }
+        
     }
 
     async getOrderById(id: string): Promise<ApiResponse<any>> {
@@ -42,9 +42,9 @@ export class OrderApplicationService {
 
         if (order) {
             return new ApiResponse(0, 'Order retrieved successfully', order);
-        } else {
+        } 
             return new ApiResponse(1, 'Order not found', null);
-        }
+        
     }
 
     async getAllOrders(): Promise<ApiResponse<any>> {
@@ -52,8 +52,8 @@ export class OrderApplicationService {
 
         if (orders.length > 0) {
             return new ApiResponse(0, 'Orders retrieved successfully', orders);
-        } else {
+        } 
             return new ApiResponse(1, 'No orders found', []);
-        }
+        
     }
 }

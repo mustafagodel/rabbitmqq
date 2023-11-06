@@ -98,4 +98,27 @@ export class ProductRepository {
             throw error;
         }
     }
+    async checkStockByName(productName: string, quantity: number): Promise<boolean> {
+        if (!this.collection) {
+            return false;
+        }
+    
+        try {
+            const productDoc = await this.collection.findOne({ name: productName });
+    
+            if (!productDoc) {
+                return false;
+            }
+    
+    
+            if (productDoc.stock >= quantity) {
+                return true;
+            } else {
+                return false;
+            }
+        } catch (error) {
+            console.error('MongoDB Query error:', error);
+            return false;
+        }
+    }
 }
