@@ -55,4 +55,14 @@ export class ProductApplicationService {
             return new ApiResponse(1, 'No products found', []);
         
     }
+    async getProductByName(name: string): Promise<ApiResponse<any>> {
+        const product = await this.productService.getProductByName(name);
+
+        if (product) {
+            return new ApiResponse(0, 'Product succes', product);
+        } else {
+            return new ApiResponse(1, 'Product not found', null);
+        }
+    }
+    
 }

@@ -53,4 +53,19 @@ export class ProductService {
  
         return this.productRepository.getAll();
     }
+    async getProductByName(name: string): Promise<Product | undefined> {
+        try {
+            const product = await this.productRepository.getByName(name);
+    
+            if (product) {
+                return product;
+            }
+    
+            return undefined;
+        } catch (error) {
+            console.error('Error while fetching product by name:', error);
+            throw error;
+        }
+    }
+    
 }

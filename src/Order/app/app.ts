@@ -6,7 +6,7 @@ import jwt from 'jsonwebtoken';
 import { RabbitMQService } from '../../infrastructure/RabbitMQService';
 
 @injectable()
-export class OrderController {
+export class OrderApp{
     private readonly orderAppService: OrderApplicationService;
 
     constructor(
@@ -34,7 +34,7 @@ export class OrderController {
     }
 
 
-    private functions = {
+    public functions = {
         async createOrder(orderAppService: OrderApplicationService, messageData: any, rabbitmqService: RabbitMQService) {
             const response = await orderAppService.createOrder(
                 messageData.orderId,

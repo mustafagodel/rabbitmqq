@@ -98,27 +98,26 @@ export class ProductRepository {
             throw error;
         }
     }
-    async checkStockByName(productName: string, quantity: number): Promise<boolean> {
+    async getByName(name: string): Promise<Product | undefined> {
         if (!this.collection) {
-            return false;
+            return undefined;
         }
     
         try {
-            const productDoc = await this.collection.findOne({ name: productName });
+            const productDoc = await this.collection.findOne({ name: name });
     
             if (!productDoc) {
-                return false;
+                return undefined;
             }
     
+            const product: Product = new Product(productDoc.type, productDoc.name, productDoc.price, productDoc.stock);
+            product.id = productDoc._id.toString();
     
-            if (productDoc.stock >= quantity) {
-                return true;
-            } else {
-                return false;
-            }
+            return product;
         } catch (error) {
             console.error('MongoDB Query error:', error);
-            return false;
+            throw error;
         }
     }
+   
 }

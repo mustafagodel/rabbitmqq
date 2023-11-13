@@ -24,6 +24,7 @@ export class RequestResponseMap {
       'getOrder':OrderrabbitmqService,
       'getAllOrders':OrderrabbitmqService,
       'getname':OrderrabbitmqService,
+      'checkAndDecreaseStock':ProductrabbitmqService
     };
   }
 

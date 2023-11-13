@@ -6,8 +6,9 @@ import { ApiResponse } from '../../infrastructure/ApiResponse';
 import { ProductApplicationService } from '../appservices/ProductApplicationService';
 import { RabbitMQService } from '../../infrastructure/RabbitMQService';
 import 'reflect-metadata';
+import { OrderItem } from '../../Order/domain/Product/Order';
 @injectable()
-export class ProductController {
+export class ProductApp {
     private readonly router: Router;
     private readonly productAppService: ProductApplicationService;
   
@@ -142,23 +143,47 @@ export class ProductController {
             });
         }
       };
-      async getname(productAppService: ProductApplicationService, messageData: any, rabbitmqService: RabbitMQService) {
+     
+      async checkAndDecreaseStock(messageData: any) {
+  
+         
+            const itemsArray: string[] = JSON.parse(messageData.items.replace(/'/g, '"'));
+            const productName: string = itemsArray[0];
+            const stockAsString: string = itemsArray[1];
+            const product = await this.productAppService.getProductByName(productName);
+        
+       
+            console.log('Retrieved product:', product);
+        
+            if (!product) {
+                return 'error';
+            }
+            const stockAsNumber = parseFloat(stockAsString);
+ 
+            if (product.data.stock >= stockAsNumber) {
+                return 'success';
+            } else {
+                return 'insufficient_stock'; 
+            }
+        }
+    
+    async getname(productAppService: ProductApplicationService, messageData: any, rabbitmqService: RabbitMQService) {
         const createResult = await productAppService.getProductByName(
-          messageData.name, 
+            messageData.name,
         );
-      
+
         const responseMessage = {
-          action: 'get_response',
-          response: createResult,
+            action: 'getname_response',
+            response: createResult,
         };
         const responseMessageText = JSON.stringify(responseMessage);
-      
+
         rabbitmqService.sendMessage(responseMessageText, (error: any) => {
-          if (error) {
-            console.error('RabbitMQ bağlantı veya gönderme hatası:', error);
-          } else {
-            console.log('Response mesajı RabbitMQ\'ya gönderildi.');
-          }
+            if (error) {
+                console.error('RabbitMQ connection or sending error:', error);
+            } else {
+                console.log('Response message has been sent to RabbitMQ.');
+            }
         });
-      }
+    }
 }

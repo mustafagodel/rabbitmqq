@@ -16,7 +16,7 @@ interface ApiResponse<T> {
 }
 
 @injectable()
-export class UserController {
+export class AuthApp{
     private readonly userAppService: UserApplicationService;
 
 
