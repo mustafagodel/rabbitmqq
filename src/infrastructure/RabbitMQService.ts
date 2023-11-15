@@ -3,7 +3,7 @@ import { injectable } from 'inversify';
 
 @injectable()
 export class RabbitMQService {
-    [x: string]: any;
+
     private channel: amqplib.Channel | undefined;
     private isConsuming: boolean = false; 
 
@@ -39,6 +39,7 @@ export class RabbitMQService {
         this.messageHandler = callback;
     }
 
+
     private startConsumingMessages(channel: amqplib.Channel) {
         if (this.isConsuming) {
             console.log('Already processing the messages.');
@@ -65,5 +66,17 @@ export class RabbitMQService {
         this.channel.sendToQueue(this.queueName, Buffer.from(message));
         console.log('The request was received sent RabbitMQ', message);
         callback(null);
+    }
+    public closeChannel() {
+        if (this.channel) {
+            this.channel.close((error) => {
+                if (error) {
+                    console.error('Error closing RabbitMQ channel:', error);
+                } else {
+                    console.log('RabbitMQ channel closed.');
+                    this.isConsuming = false;
+                }
+            });
+        }
     }
 }

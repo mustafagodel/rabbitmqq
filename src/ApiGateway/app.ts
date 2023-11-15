@@ -35,75 +35,26 @@ const secretKey = process.env.SECRET_KEY as string;
 const aggregator =container.get<Aggregator>(Aggregator);
 
 
-const sendResponseToClient = (res, rabbitmqServiceToUse, messageText) => {
-  rabbitmqServiceToUse.sendMessage(messageText, (error) => {
-    if (error) {
-      console.log('RabbitMQ is connected or Sending error:', error);
-      return res.status(500).json(error);
-    }
-    console.log('The Request was received and Sent to RabbitMQ');
 
-    rabbitmqServiceToUse.onMessageReceived((message) => {
-      const messageData = JSON.parse(message);
-      res.status(200).json(messageData);
-    });
-  })
-};
 app.post('/api/deneme', (req, res) => {
   const requestData = req.body;
-  const messageText = JSON.stringify(requestData);
   const rabbitmqServiceToUse = requestResponseMap.getRequestService(requestData.action);
   if (!rabbitmqServiceToUse) {
     return res.status(400).json({ error: 'Invalid action' });
   }
 
   if (!requestResponseMap.requiresToken(requestData.action)) {
-    sendResponseToClient(res, rabbitmqServiceToUse, messageText);
+    aggregator.handleRequest(requestData, rabbitmqServiceToUse, res);
   } else {
     const userToken = req.headers.authorization;
     if (userToken && typeof userToken === 'string') {
-      aggregator.handleCreateOrder(requestData, rabbitmqServiceToUse, res);
+      aggregator.handleRequest(requestData, rabbitmqServiceToUse, res);
     } else {
       res.status(401).json({ error: 'Unauthorized' });
     }
   }
 });
-app.post('/api',(req, res) => {
-  const requestData = req.body;
-  const messageText = JSON.stringify(requestData);
 
-  const rabbitmqServiceToUse = requestResponseMap.getRequestService(requestData.action);
-  if (!rabbitmqServiceToUse) {
-    return res.status(400).json({ error: 'Invalid action' });
-  }
-
-  if (!requestResponseMap.requiresToken(requestData.action)) {
-    sendResponseToClient(res, rabbitmqServiceToUse, messageText);
-  } else {
-    const userToken = req.headers.authorization;
-    if (userToken && typeof userToken === 'string') {
-      jwt.verify(userToken, secretKey, async (err, decoded) => {
-        const user = decoded;
-        const action = requestData.action;
-        if (action === 'createOrder') {
-            const stockCheckResult = await product.checkAndDecreaseStock(requestData);
-
-            if (stockCheckResult === 'success') {
-              sendResponseToClient(res, rabbitmqServiceToUse, messageText);
-             }else{
-            
-                const errorResponseMessage = {
-                    message: 'Yetersiz stok',
-                };
-                const errorResponseMessageText = JSON.stringify(errorResponseMessage);              
-        sendResponseToClient(res, rabbitmqServiceToUse, errorResponseMessageText);
-              }
-            }   
-            sendResponseToClient(res, rabbitmqServiceToUse, messageText);
-      });
-    } 
-  }
-});
 
 
 
@@ -111,5 +62,3 @@ app.post('/api',(req, res) => {
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
-
-

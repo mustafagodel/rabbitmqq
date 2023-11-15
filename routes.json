@@ -1,0 +1,34 @@
+{
+    "routes": [
+      {
+        "action": "createOrder",
+        "microservices": [
+          {
+            "name": "product",
+            "handler": "checkAndDecreaseStock",
+            "check": "necessary"
+          }
+        ]
+      }, 
+       {
+        "action": "create",
+        "microservices": [
+          {
+            "name": "product",
+            "check": "notnecessary"
+          }
+        ]
+      },
+      {
+        "action": "login",
+        "microservices": [
+          {
+            "name": "auth",
+            "check": "notnecessary"
+          }
+        ]
+      }
+    
+    ]
+  }
+  

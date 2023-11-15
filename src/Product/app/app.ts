@@ -15,13 +15,14 @@ export class ProductApp {
 
     constructor(
         @inject(ProductService) private productService: ProductService,
-        @inject('ProductRabbitMQServiceQueue') private ProductrabbitmqService: RabbitMQService,
+        @inject('ProductRabbitMQServiceQueue') private productrabbitmqService: RabbitMQService,
         @inject(ProductApplicationService) private productApplicationService: ProductApplicationService,
     ) {
         this.router = express.Router();
         this.productAppService = productApplicationService;
+        this.productrabbitmqService = productrabbitmqService;
 
-        this.ProductrabbitmqService.onMessageReceived((message: string) => {
+        this.productrabbitmqService.onMessageReceived((message: string) => {
             this.handleMessage(message);
         });
     }
@@ -37,7 +38,7 @@ export class ProductApp {
          
         }
 
-        return await func(this.productApplicationService, messageData, this.ProductrabbitmqService);
+        return await func(this.productApplicationService, messageData, this.productrabbitmqService);
     }
 
 
@@ -161,7 +162,9 @@ export class ProductApp {
             const stockAsNumber = parseFloat(stockAsString);
  
             if (product.data.stock >= stockAsNumber) {
-                return 'success';
+                return 'succes';
+        
+              
             } else {
                 return 'insufficient_stock'; 
             }
