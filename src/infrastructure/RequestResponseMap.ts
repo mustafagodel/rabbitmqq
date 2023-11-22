@@ -8,7 +8,8 @@ export class RequestResponseMap {
   constructor(
     @inject('UserRabbitMQServiceQueue') UserrabbitmqService: RabbitMQService,
     @inject('ProductRabbitMQServiceQueue') ProductrabbitmqService: RabbitMQService,
-    @inject('OrderRabbitMQServiceQueue') OrderrabbitmqService: RabbitMQService
+    @inject('OrderRabbitMQServiceQueue') OrderrabbitmqService: RabbitMQService,
+    @inject('AggregatorRabbitMQServiceQueue') aggregatorRabbitMQServiceQueue: RabbitMQService
   ) {
     this.requestMap = {
       'login': UserrabbitmqService,
@@ -24,7 +25,8 @@ export class RequestResponseMap {
       'getOrder':OrderrabbitmqService,
       'getAllOrders':OrderrabbitmqService,
       'getname':OrderrabbitmqService,
-      'checkAndDecreaseStock':ProductrabbitmqService
+      'checkAndDecreaseStock':ProductrabbitmqService,
+      'handleMessageAction':aggregatorRabbitMQServiceQueue
     };
   }
 

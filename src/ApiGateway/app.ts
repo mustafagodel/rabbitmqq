@@ -36,27 +36,47 @@ const aggregator =container.get<Aggregator>(Aggregator);
 
 
 
+
 app.post('/api/deneme', (req, res) => {
   const requestData = req.body;
   const rabbitmqServiceToUse = requestResponseMap.getRequestService(requestData.action);
+
   if (!rabbitmqServiceToUse) {
     return res.status(400).json({ error: 'Invalid action' });
   }
 
   if (!requestResponseMap.requiresToken(requestData.action)) {
-    aggregator.handleRequest(requestData, rabbitmqServiceToUse, res);
+    sendResponseToClient(res,rabbitmqServiceToUse,requestData);
+    
   } else {
     const userToken = req.headers.authorization;
     if (userToken && typeof userToken === 'string') {
-      aggregator.handleRequest(requestData, rabbitmqServiceToUse, res);
+      sendResponseToClient(res,rabbitmqServiceToUse,requestData);
+
     } else {
       res.status(401).json({ error: 'Unauthorized' });
     }
   }
 });
+const sendResponseToClient = (res, rabbitmqServiceToUse, requestData) => {
+  const responseMessageText = JSON.stringify(requestData);
 
+  rabbitmqServiceToUse.sendMessage(responseMessageText, (error) => {
+    if (error) {
+      console.log('RabbitMQ is connected or Sending error:', error);
+      return res.status(500).json(error);
+    }
+    console.log('The Request was received and Sent to RabbitMQ');
+   
+  });
+  rabbitmqServiceToUse.onMessageReceived((message) => {
+    const responseData =  aggregator.handleMessageAction(message);
+    const responseMessageText = JSON.stringify(message);
+    console.log('Received message from RabbitMQ:', responseMessageText);
 
-
+    res.status(200).json(responseMessageText);
+  });
+};
 
 
 app.listen(port, () => {

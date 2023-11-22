@@ -9,6 +9,7 @@ import { AuthApp } from '../Auth/app/app';
 
 @injectable()
 export class Aggregator {
+  [x: string]: any;
   public routes: any[] | undefined;
 
   constructor(
@@ -25,62 +26,115 @@ export class Aggregator {
     this.requestResponseMap = requestResponseMap;
     this.aggregatorRabbitMQServiceQueue = aggregatorRabbitMQServiceQueue;
     this.loadRoutes();
-  }
+    this.aggregatorRabbitMQServiceQueue.onMessageReceived((message: string) => {
+      this.handleMessageAction(message);
+  });
 
-  public async handleRequest(
-    requestData: any,
-    rabbitmqServiceToUse: RabbitMQService,
-    res: any
-  ): Promise<void> {
-    const action = requestData.action;
+
   
+  }
+  public async handleMessageAction(message: string,) {
+
+    const requestData = JSON.parse(message);
+    const action = requestData.handler;
+    const request=requestData.action;
+    const rabbitmqServiceToUse = this.requestResponseMap.getRequestService(action);
+
+
+    
     if (!this.routes) {
       console.error('Routes are not loaded');
-      return res.status(500).json({ error: 'Routes are not loaded' });
+
+      return;
     }
   
-    const routes = this.routes.filter((r) => r.action === action);
+    const routes = this.routes.filter((r) => r.handler === action);
   
     if (routes.length === 0) {
       console.error('Route not found for action:', action);
-      return res.status(500).json({ error: 'Route not found' });
+
+      return;
     }
   
     for (const route of routes) {
       if (!route.microservices) continue;
       for (const microservice of route.microservices) {
-        const { name, handler, AppService ,check} = microservice;
+        const { name, handler, check } = microservice;
         const microserviceController = this.getMicroserviceController(name);
   
         if (!microserviceController) {
           console.error('Microservice not found:', name);
-          return res.status(500).json({ error: 'Microservice not found' });
+        
+          return;
         }
   
         console.log(microserviceController);
- 
-          if(check=='notnecessary'){
-            const responseMessageText = JSON.stringify(requestData);
-            sendResponseToClient(res, rabbitmqServiceToUse, responseMessageText);
-            break;
-          }
-           const resultProduct = await microserviceController[handler](requestData);
-          if (resultProduct === 'succes') {             
-              const responseMessageText = JSON.stringify(requestData);
-              sendResponseToClient(res, rabbitmqServiceToUse, responseMessageText);
-            }else{
-              return res.status(500).json({ error: 'Out of stock' });
+  
+        if (check === 'notnecessary') {
+          
+          const responseMessageText = JSON.stringify(requestData);
+          console.log('messageText before sending:', responseMessageText);
+          rabbitmqServiceToUse?.sendMessage(responseMessageText, (error) => {
+            if (error) {
+              console.log('RabbitMQ is connected or Sending error:', error);
             }
-      
+            console.log('The Request was received and Sent to RabbitMQ');
+          });
+          break;
+        }
+  
+   
+          const resultProduct = await microserviceController[handler](requestData);
+          if (resultProduct === 'succes') {
+            const responseMessageText = JSON.stringify(requestData);
+            
+            rabbitmqServiceToUse?.sendMessage(responseMessageText, (error) => {
+              if (error) {
+                console.log('RabbitMQ is connected or Sending error:', error);
+
+              }
+              console.log('The Request was received and Sent to RabbitMQ');
+            });
+           
+          } else {
+            const responseMessage = {
+              response:"stok yok" ,
+          };
+            const responseMessageText = JSON.stringify(responseMessage);
+            rabbitmqServiceToUse?.sendMessage(responseMessageText, (error) => {
+              if (error) {
+                console.log('RabbitMQ is connected or Sending error:', error);
+              }
+              console.log('The Request was received and Sent to RabbitMQ');
+        
+            });
+   
+          }
         
       }
-    }
+    
   }
-  private loadRoutes() {
-    const rawData = fs.readFileSync('routes.json');
-    this.routes = JSON.parse(rawData.toString()).routes;
-  }
+   
+    
+}
 
+
+private loadRoutes() {
+  try {
+
+    if (fs.existsSync('routes.json')) {
+      const rawData = fs.readFileSync('routes.json');
+      this.routes = JSON.parse(rawData.toString()).routes;
+      console.log('Routes loaded successfully.');
+    } else {
+      console.error('Error: File "routes.json" does not exist.');
+
+    }
+  } catch (error) {
+    console.error('Error loading routes:', error);
+
+  }
+}
 
   private getMicroserviceController(microserviceName: string): any | null {
     if (microserviceName === 'product') {
@@ -97,17 +151,6 @@ export class Aggregator {
 }
 
 }
-const sendResponseToClient = (res, rabbitmqServiceToUse, messageText) => {
-  rabbitmqServiceToUse.sendMessage(messageText, (error) => {
-    if (error) {
-      console.log('RabbitMQ is connected or Sending error:', error);
-      return res.status(500).json(error);
-    }
-    console.log('The Request was received and Sent to RabbitMQ');
 
-    rabbitmqServiceToUse.onMessageReceived((message) => {
-      const messageData = JSON.parse(message);
-      res.status(200).json(messageData);
-    });
-  })
-};
+
+ 

@@ -46,12 +46,25 @@ export class RabbitMQService {
             return;
         }
         this.isConsuming = true;
-
+    
         channel.consume(this.queueName, (message) => {
             if (message) {
                 const content = message.content.toString();
                 this.messageHandler(content);
                 channel.ack(message);
+    
+                // Check the content of the received message
+                if (content === 'stopConsuming') {
+                    console.log('Stopping message consumption.');
+                    this.isConsuming = false;
+                    channel.close((error) => {
+                        if (error) {
+                            console.error('Error closing RabbitMQ channel:', error);
+                        } else {
+                            console.log('RabbitMQ channel closed.');
+                        }
+                    });
+                }
             }
         });
     }

@@ -55,6 +55,7 @@ container.bind<RabbitMQService>('UserRabbitMQServiceQueue').toDynamicValue(() =>
   container.bind<RabbitMQService>('AggregatorRabbitMQServiceQueue').toDynamicValue(() => {
     return new RabbitMQService('amqp://localhost', 'Queue4');
   })
+
   container.bind<RequestResponseMap>(RequestResponseMap).toSelf();
 };
 

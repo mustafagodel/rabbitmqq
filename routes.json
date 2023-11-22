@@ -1,7 +1,8 @@
 {
     "routes": [
       {
-        "action": "createOrder",
+        "action": "handleMessageAction",
+        "handler": "createOrder",
         "microservices": [
           {
             "name": "product",
@@ -11,7 +12,8 @@
         ]
       }, 
        {
-        "action": "create",
+        "action": "handleMessageAction",
+        "handler": "create",
         "microservices": [
           {
             "name": "product",
@@ -20,7 +22,98 @@
         ]
       },
       {
-        "action": "login",
+        "action": "handleMessageAction",
+        "handler": "update",
+        "microservices": [
+          {
+            "name": "product",
+            "check": "notnecessary"
+          }
+        ]
+      },
+      {
+        "action": "handleMessageAction",
+        "handler": "delete",
+        "microservices": [
+          {
+            "name": "product",
+            "check": "notnecessary"
+          }
+        ]
+      },
+      {
+        "action": "handleMessageAction",
+        "handler": "get",
+        "microservices": [
+          {
+            "name": "product",
+            "check": "notnecessary"
+          }
+        ]
+      },
+      {
+        "action": "handleMessageAction",
+        "handler": "getAll",
+        "microservices": [
+          {
+            "name": "product",
+            "check": "notnecessary"
+          }
+        ]
+      },
+      {
+        "action": "handleMessageAction",
+        "handler": "updateOrder",
+        "microservices": [
+          {
+            "name": "order",
+            "check": "notnecessary"
+          }
+        ]
+      },
+      {
+        "action": "handleMessageAction",
+        "handler": "deleteOrder",
+        "microservices": [
+          {
+            "name": "order",
+            "check": "notnecessary"
+          }
+        ]
+      },
+      {
+        "action": "handleMessageAction",
+        "handler": "getOrder",
+        "microservices": [
+          {
+            "name": "order",
+            "check": "notnecessary"
+          }
+        ]
+      }, 
+      {
+        "action": "handleMessageAction",
+        "handler": "getAllOrders",
+        "microservices": [
+          {
+            "name": "order",
+            "check": "notnecessary"
+          }
+        ]
+      },
+      {
+        "action": "handleMessageAction",
+        "handler": "login",
+        "microservices": [
+          {
+            "name": "auth",
+            "check": "notnecessary"
+          }
+        ]
+      },
+      {
+        "action": "handleMessageAction",
+        "handler": "register",
         "microservices": [
           {
             "name": "auth",
@@ -28,7 +121,6 @@
           }
         ]
       }
-    
     ]
   }
   
