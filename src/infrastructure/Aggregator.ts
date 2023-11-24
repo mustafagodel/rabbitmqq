@@ -9,11 +9,12 @@ import { AuthApp } from '../Auth/app/app';
 
 @injectable()
 export class Aggregator {
-  [x: string]: any;
   public routes: any[] | undefined;
-
+  private lastReceivedMessage: any;
   constructor(
     @inject('AggregatorRabbitMQServiceQueue') private aggregatorRabbitMQServiceQueue: RabbitMQService,
+    @inject('mg') private mg: RabbitMQService,
+    
     @inject(ProductApp) private productApp: ProductApp,
     @inject(OrderApp) private orderApp: OrderApp,
     @inject(AuthApp) private authApp: AuthApp,
@@ -21,24 +22,27 @@ export class Aggregator {
   ) {
     this.productApp = productApp;
     this.orderApp = orderApp;
+    this.mg = mg;
     this.authApp = authApp;
-
+    this.lastReceivedMessage = null;
     this.requestResponseMap = requestResponseMap;
     this.aggregatorRabbitMQServiceQueue = aggregatorRabbitMQServiceQueue;
     this.loadRoutes();
     this.aggregatorRabbitMQServiceQueue.onMessageReceived((message: string) => {
       this.handleMessageAction(message);
-  });
+  }); 
 
 
-  
+ 
+  }
+  public getLastReceivedMessage() {
+    return this.lastReceivedMessage;
   }
   public async handleMessageAction(message: string,) {
 
     const requestData = JSON.parse(message);
     const action = requestData.handler;
-    const request=requestData.action;
-    const rabbitmqServiceToUse = this.requestResponseMap.getRequestService(action);
+    const rabbitmqServiceToUse = this.requestResponseMap.getRequestService(requestData.handler);
 
 
     
@@ -94,8 +98,10 @@ export class Aggregator {
 
               }
               console.log('The Request was received and Sent to RabbitMQ');
-            });
-           
+         
+            }) 
+            
+         
           } else {
             const responseMessage = {
               response:"stok yok" ,
@@ -110,14 +116,13 @@ export class Aggregator {
             });
    
           }
+
+          
         
       }
-    
-  }
-   
-    
+     
+  } 
 }
-
 
 private loadRoutes() {
   try {
@@ -150,7 +155,8 @@ private loadRoutes() {
   return null;
 }
 
+
 }
 
 
- 
+

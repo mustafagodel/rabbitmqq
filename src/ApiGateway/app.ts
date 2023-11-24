@@ -1,6 +1,6 @@
 import express from 'express';
 import 'reflect-metadata';
-import bodyParser from 'body-parser';
+import bodyParser, { json } from 'body-parser';
 import { Container } from 'inversify';
 import configureContainer from '../infrastructure/inversify.config';
 import { AuthApp } from '../Auth/app/app.js';
@@ -15,6 +15,7 @@ import { RequestResponseMap } from '../infrastructure/RequestResponseMap';
 require('dotenv').config();
 import jwt from 'jsonwebtoken';
 import { Aggregator } from '../infrastructure/Aggregator';
+import { Response } from 'express-serve-static-core';
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -47,37 +48,38 @@ app.post('/api/deneme', (req, res) => {
 
   if (!requestResponseMap.requiresToken(requestData.action)) {
     sendResponseToClient(res,rabbitmqServiceToUse,requestData);
-    
+  
   } else {
     const userToken = req.headers.authorization;
     if (userToken && typeof userToken === 'string') {
       sendResponseToClient(res,rabbitmqServiceToUse,requestData);
-
+  
     } else {
       res.status(401).json({ error: 'Unauthorized' });
     }
   }
+   
 });
-const sendResponseToClient = (res, rabbitmqServiceToUse, requestData) => {
-  const responseMessageText = JSON.stringify(requestData);
 
+const sendResponseToClient = (res: Response<any, Record<string, any>, number>, rabbitmqServiceToUse: RabbitMQService, requestData: any) => {
+  const rabbitmqServiceToUsehandler = requestResponseMap.getRequestService(requestData.handler);
+
+  const responseMessageText = JSON.stringify(requestData);
   rabbitmqServiceToUse.sendMessage(responseMessageText, (error) => {
+    
     if (error) {
       console.log('RabbitMQ is connected or Sending error:', error);
-      return res.status(500).json(error);
     }
     console.log('The Request was received and Sent to RabbitMQ');
-   
-  });
-  rabbitmqServiceToUse.onMessageReceived((message) => {
-    const responseData =  aggregator.handleMessageAction(message);
-    const responseMessageText = JSON.stringify(message);
-    console.log('Received message from RabbitMQ:', responseMessageText);
+    rabbitmqServiceToUsehandler?.onMessageReceived((message) => {
+      res.status(200).json(message);
+      });
 
-    res.status(200).json(responseMessageText);
   });
-};
 
+}
+
+ 
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);

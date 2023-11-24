@@ -15,6 +15,7 @@ export class OrderApp{
         @inject(OrderApplicationService) orderAppService: OrderApplicationService
     ) {
         this.orderAppService = orderAppService;
+   
 
         this.OrderrabbitmqService.onMessageReceived((message: string) => {
             this.handleMessage(message);
@@ -29,7 +30,7 @@ export class OrderApp{
         if (!func) {
             throw new Error('undefined method');
         }
-
+     
         return await func(this.orderAppService, messageData, this.OrderrabbitmqService);
     }
 

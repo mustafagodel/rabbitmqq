@@ -3,16 +3,16 @@ import { injectable } from 'inversify';
 
 @injectable()
 export class RabbitMQService {
-
     private channel: amqplib.Channel | undefined;
-    private isConsuming: boolean = false; 
-
+    private isConsuming: boolean = false;
     private queueName: string;
     private messageHandler: (message: string) => void;
+    private consumerTag: string | undefined;
 
     constructor(rabbitmqServer: string, queueName: string) {
         this.queueName = queueName;
         this.messageHandler = (_message: string) => {};
+        this.consumerTag = undefined;
 
         amqplib.connect(rabbitmqServer, (error, connection) => {
             if (error) {
@@ -39,6 +39,13 @@ export class RabbitMQService {
         this.messageHandler = callback;
     }
 
+    public removeMessageListener() {
+        if (this.consumerTag && this.channel) {
+            this.channel.cancel(this.consumerTag);
+            this.consumerTag = undefined;
+            console.log('Message listener removed.');
+        }
+    }
 
     private startConsumingMessages(channel: amqplib.Channel) {
         if (this.isConsuming) {
@@ -46,17 +53,17 @@ export class RabbitMQService {
             return;
         }
         this.isConsuming = true;
-    
+
         channel.consume(this.queueName, (message) => {
             if (message) {
                 const content = message.content.toString();
                 this.messageHandler(content);
                 channel.ack(message);
-    
-                // Check the content of the received message
+
                 if (content === 'stopConsuming') {
                     console.log('Stopping message consumption.');
                     this.isConsuming = false;
+                    this.removeMessageListener();
                     channel.close((error) => {
                         if (error) {
                             console.error('Error closing RabbitMQ channel:', error);
@@ -80,6 +87,7 @@ export class RabbitMQService {
         console.log('The request was received sent RabbitMQ', message);
         callback(null);
     }
+
     public closeChannel() {
         if (this.channel) {
             this.channel.close((error) => {
