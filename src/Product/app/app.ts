@@ -30,7 +30,7 @@ export class ProductApp {
     public async handleMessage(message: string) {
         const messageData = JSON.parse(message);
 
-        const func = this.functions[messageData.action];
+        const func = this.functions[messageData.handler];
 
         if(!func) {
 
@@ -51,7 +51,7 @@ export class ProductApp {
             const createResult = await productAppService.createProduct(messageData.type,messageData.name,messageData.price,messageData.stock );
     
             const responseMessage = {
-                action: 'create_response',
+
                 response: createResult,
             };
             const responseMessageText = JSON.stringify(responseMessage);

@@ -38,7 +38,7 @@ export class AuthApp{
     public async handleMessage(message: string,) {
         const messageData = JSON.parse(message);
 
-        const func = this.functions[messageData.action];
+        const func = this.functions[messageData.handler];
 
         if(!func) {
             throw new Error("undefined method");            

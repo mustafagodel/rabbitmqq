@@ -33,7 +33,7 @@ const product =container.get<ProductApp>(ProductApp);
 container.get<OrderApp>(OrderApp);
 const requestResponseMap = container.get<RequestResponseMap>(RequestResponseMap);
 const secretKey = process.env.SECRET_KEY as string; 
-const aggregator =container.get<Aggregator>(Aggregator);
+container.get<Aggregator>(Aggregator);
 
 
 
@@ -41,12 +41,13 @@ const aggregator =container.get<Aggregator>(Aggregator);
 app.post('/api/deneme', (req, res) => {
   const requestData = req.body;
   const rabbitmqServiceToUse = requestResponseMap.getRequestService(requestData.action);
+  
 
   if (!rabbitmqServiceToUse) {
     return res.status(400).json({ error: 'Invalid action' });
   }
 
-  if (!requestResponseMap.requiresToken(requestData.action)) {
+  if (!requestResponseMap.requiresToken(requestData.handler)) {
     sendResponseToClient(res,rabbitmqServiceToUse,requestData);
   
   } else {

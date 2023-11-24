@@ -84,8 +84,9 @@ export class Aggregator {
             }
             console.log('The Request was received and Sent to RabbitMQ');
           });
+
           break;
-        }
+      }
   
    
           const resultProduct = await microserviceController[handler](requestData);
