@@ -64,7 +64,6 @@ app.post('/api/deneme', (req, res) => {
 
 const sendResponseToClient = (res: Response<any, Record<string, any>, number>, rabbitmqServiceToUse: RabbitMQService, requestData: any) => {
   const rabbitmqServiceToUsehandler = requestResponseMap.getRequestService(requestData.handler);
-
   const responseMessageText = JSON.stringify(requestData);
   rabbitmqServiceToUse.sendMessage(responseMessageText, (error) => {
     
@@ -74,8 +73,9 @@ const sendResponseToClient = (res: Response<any, Record<string, any>, number>, r
     console.log('The Request was received and Sent to RabbitMQ');
     rabbitmqServiceToUsehandler?.onMessageReceived((message) => {
       res.status(200).json(message);
-      });
 
+    });
+     
   });
 
 }

@@ -64,13 +64,7 @@ export class RabbitMQService {
                     console.log('Stopping message consumption.');
                     this.isConsuming = false;
                     this.removeMessageListener();
-                    channel.close((error) => {
-                        if (error) {
-                            console.error('Error closing RabbitMQ channel:', error);
-                        } else {
-                            console.log('RabbitMQ channel closed.');
-                        }
-                    });
+                   
                 }
             }
         });
