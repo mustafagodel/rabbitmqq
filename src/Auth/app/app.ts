@@ -64,6 +64,7 @@ export class AuthApp{
                     console.log('Response mesajı RabbitMQ\'ya gönderildi.');
                 
             });
+
         },
         async register(userAppService: UserApplicationService, messageData: any, rabbitmqService: RabbitMQService) {
             const registrationResponse = await userAppService.registerUser(messageData.username, messageData.password);
@@ -80,6 +81,7 @@ export class AuthApp{
                     console.log('Response mesajı RabbitMQ\'ya gönderildi.');
                 }
             });
+     
         },
       };
 }

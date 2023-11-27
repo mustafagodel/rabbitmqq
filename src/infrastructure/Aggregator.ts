@@ -13,7 +13,6 @@ export class Aggregator {
   private lastReceivedMessage: any;
   constructor(
     @inject('AggregatorRabbitMQServiceQueue') private aggregatorRabbitMQServiceQueue: RabbitMQService,
-    @inject('mg') private mg: RabbitMQService,
     
     @inject(ProductApp) private productApp: ProductApp,
     @inject(OrderApp) private orderApp: OrderApp,
@@ -22,7 +21,6 @@ export class Aggregator {
   ) {
     this.productApp = productApp;
     this.orderApp = orderApp;
-    this.mg = mg;
     this.authApp = authApp;
     this.lastReceivedMessage = null;
     this.requestResponseMap = requestResponseMap;
@@ -84,8 +82,8 @@ export class Aggregator {
             }
             console.log('The Request was received and Sent to RabbitMQ');
           });
+          return;
 
-          break;
       }
   
    

@@ -1,6 +1,6 @@
 import { Request, Response, Router } from 'express';
 import { ProductService } from '../domain/Product/ProductService';
-import { inject, injectable } from 'inversify';
+import { id, inject, injectable } from 'inversify';
 import express from 'express';
 import { ApiResponse } from '../../infrastructure/ApiResponse';
 import { ProductApplicationService } from '../appservices/ProductApplicationService';
@@ -48,22 +48,51 @@ export class ProductApp {
        
     public  functions = {
         async create(productAppService: ProductApplicationService, messageData: any, rabbitmqService: RabbitMQService) {
-            const createResult = await productAppService.createProduct(messageData.type,messageData.name,messageData.price,messageData.stock );
-    
-            const responseMessage = {
 
-                response: createResult,
-            };
-            const responseMessageText = JSON.stringify(responseMessage);
-    
-     
-            rabbitmqService.sendMessage(responseMessageText, (error: any) => {
-                if (error) {
-                    console.error('RabbitMQ connection or sending error:', error);
-                } else {
-                    console.log('The response message has been sent to RabbitMQ.');
-                }
-            });
+            const existingProduct = await productAppService.getProductByName(messageData.name);
+            
+           
+            if (existingProduct.message=="Product succes") {
+                const existingStock = parseFloat(existingProduct.data.stock);
+                const additionalStock = parseFloat(messageData.stock);
+                existingProduct.data.stock = (existingStock + additionalStock).toString();
+                const updateResult =await productAppService.updateProduct(existingProduct.data.id,existingProduct.data.type,existingProduct.data.name,existingProduct.data.price,existingProduct.data.stock);
+        
+                const responseMessage = {
+                    response: updateResult,
+                };
+        
+                const responseMessageText = JSON.stringify(responseMessage);
+        
+                rabbitmqService.sendMessage(responseMessageText, (error: any) => {
+                    if (error) {
+                        console.error('RabbitMQ connection or sending error:', error);
+                    } else {
+                        console.log('The response message has been sent to RabbitMQ.');
+                    }
+                });
+            } else {
+                const createResult = await productAppService.createProduct(
+                    messageData.type,
+                    messageData.name,
+                    messageData.price,
+                    messageData.stock
+                );
+        
+                const responseMessage = {
+                    response: createResult,
+                };
+        
+                const responseMessageText = JSON.stringify(responseMessage);
+        
+                rabbitmqService.sendMessage(responseMessageText, (error: any) => {
+                    if (error) {
+                        console.error('RabbitMQ connection or sending error:', error);
+                    } else {
+                        console.log('The response message has been sent to RabbitMQ.');
+                    }
+                });
+            }
         },
         async update(productAppService: ProductApplicationService, messageData: any, rabbitmqService: RabbitMQService) {
             const createResult = await productAppService.updateProduct(
@@ -162,6 +191,8 @@ export class ProductApp {
             const stockAsNumber = parseFloat(stockAsString);
  
             if (product.data.stock >= stockAsNumber) {
+                product.data.stock -= stockAsNumber;
+                await this.productAppService.updateProduct(product.data.id,product.data.type,productName,product.data.price,product.data.stock);
                 return 'succes';
         
               

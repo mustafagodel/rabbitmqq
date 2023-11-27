@@ -29,10 +29,10 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(Middleware);
 app.use(AuthMiddleware);
 container.get<AuthApp>(AuthApp);
-const product =container.get<ProductApp>(ProductApp);
+container.get<ProductApp>(ProductApp);
 container.get<OrderApp>(OrderApp);
 const requestResponseMap = container.get<RequestResponseMap>(RequestResponseMap);
-const secretKey = process.env.SECRET_KEY as string; 
+process.env.SECRET_KEY as string; 
 container.get<Aggregator>(Aggregator);
 
 
@@ -72,7 +72,8 @@ const sendResponseToClient = (res: Response<any, Record<string, any>, number>, r
     }
     console.log('The Request was received and Sent to RabbitMQ');
     rabbitmqServiceToUsehandler?.onMessageReceived((message) => {
-      res.status(200).json(message);
+      const responseMessageText = JSON.parse(message);
+      res.status(200).json(responseMessageText);
 
     });
      
