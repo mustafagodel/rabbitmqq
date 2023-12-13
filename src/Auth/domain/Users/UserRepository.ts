@@ -2,16 +2,16 @@ import { Collection } from 'mongodb';
 import { inject, injectable } from 'inversify';
 import { User } from './User';
 import { MongoDBConnector } from '../../../infrastructure/db';
-import { PasswordService } from '../../../infrastructure/PasswordService';
+import { SecurityExtension } from '../../../infrastructure/SecurityExtension';
 
 @injectable()
 export class UserRepository {
     private collection: Collection | undefined;
-    private passwordService: PasswordService;
+    private passwordService: SecurityExtension;
 
     constructor(
         @inject(MongoDBConnector) private databaseConnector: MongoDBConnector,
-        @inject(PasswordService) passwordService: PasswordService
+        @inject(SecurityExtension) passwordService: SecurityExtension
     ) {
         databaseConnector.connect();
         this.collection = databaseConnector.getDb()?.collection('users');

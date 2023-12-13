@@ -7,9 +7,9 @@ import { UserApplicationService } from '../appservices/UserApplicationService';
 import jwt from 'jsonwebtoken';
 import amqplib, { Channel, Connection } from 'amqplib';
 import * as amqp from 'amqplib/callback_api';
-import  { PasswordService } from '../../infrastructure/PasswordService';
+import  { SecurityExtension } from '../../infrastructure/SecurityExtension';
 
-import { RabbitMQService } from '../../infrastructure/RabbitMQService';
+import { RabbitMQProvider } from '../../infrastructure/RabbitMQProvider';
 interface ApiResponse<T> {
     response: T;
     token: string;
@@ -22,36 +22,37 @@ export class AuthApp{
 
     constructor(
         @inject(UserService) private userService: UserService,
-        @inject(PasswordService) passwordService: PasswordService,
-        @inject('UserRabbitMQServiceQueue') private UserrabbitmqService: RabbitMQService,
-        @inject(UserApplicationService) userAppService: UserApplicationService 
+        @inject(SecurityExtension) securityExtension: SecurityExtension,
+        @inject('UserRabbitMQProviderQueue') private UserrabbitMQProvider: RabbitMQProvider,
+        @inject(UserApplicationService) userAppService: UserApplicationService ,
+        @inject('AggregatorRabbitMQProviderQueue') private aggregatorRabbitMQProviderQueue: RabbitMQProvider,
     ) {
         this.userAppService = userAppService; 
 
-        this.UserrabbitmqService.onMessageReceived((message: string) => {
+        this.UserrabbitMQProvider.onMessageReceived((message: string) => {
             this.handleMessage(message);
         });
         
     }
 
 
-    public async handleMessage(message: string,) {
+    public async handleMessage(message: string) {
         const messageData = JSON.parse(message);
 
-        const func = this.functions[messageData.handler];
+        const func = this.functions[messageData.action];
 
         if(!func) {
             throw new Error("undefined method");            
         }
-        return await func(this.userAppService, messageData, this.UserrabbitmqService);
+        return await func(this.userAppService, messageData, this.aggregatorRabbitMQProviderQueue);
     }
  
         
 
     
     private  functions = {
-        async login(userAppService: UserApplicationService, messageData: any, rabbitmqService: RabbitMQService) {
-            const response = await userAppService.loginUser(messageData.username, messageData.password);
+        async login(userAppService: UserApplicationService, messageData: any, rabbitmqService: RabbitMQProvider) {
+            const response = await userAppService.loginUser(messageData.username, messageData.password,messageData.role);
             const responseMessage = {
                 response: response,
             };
@@ -66,8 +67,8 @@ export class AuthApp{
             });
 
         },
-        async register(userAppService: UserApplicationService, messageData: any, rabbitmqService: RabbitMQService) {
-            const registrationResponse = await userAppService.registerUser(messageData.username, messageData.password);
+        async register(userAppService: UserApplicationService, messageData: any, rabbitmqService: RabbitMQProvider) {
+            const registrationResponse = await userAppService.registerUser(messageData.username, messageData.password,messageData.role);
             console.log('Register response:', registrationResponse);
 
             const responseMessage = {

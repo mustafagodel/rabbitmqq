@@ -2,6 +2,7 @@ import { inject, injectable } from 'inversify';
 import { UserService } from '../domain/Users/UserService';
 import jwt from 'jsonwebtoken';
 import {ApiResponse} from '../../infrastructure/ApiResponse';
+import { User } from '../domain/Users/User';
 
 
 
@@ -13,8 +14,8 @@ export class UserApplicationService {
 
     }
 
-    async registerUser(username: string, password: string): Promise<ApiResponse<any>> {
-        const message = await this.userService.register(username, password);
+    async registerUser(username: string, password: string,role:string): Promise<ApiResponse<any>> {
+        const message = await this.userService.register(username, password,role);
  
         if (message) {
         return new ApiResponse(0, 'User added successfully', message);
@@ -23,19 +24,20 @@ export class UserApplicationService {
         
     }
 
-    async loginUser(username: string, password: string): Promise<ApiResponse<{ token: string } | any>> {
+    async loginUser(username: string, password: string,role :string): Promise<ApiResponse<{ token: string } | any>> {
         const message = await this.userService.login(username, password);
 
     
         if (message) {
             const secretKey = process.env.SECRET_KEY;
-        
+            const user = message.user;
             if (!secretKey || typeof secretKey !== 'string') {
                 console.error('SECRET_KEY is missing or invalid.');
                 return new ApiResponse(1, 'Internal Server Error: Invalid SECRET_KEY', 'Invalid secret key');
             }
-        
-            const token = jwt.sign({ username }, secretKey);
+     console.log(role );
+            const token = jwt.sign({ role}, secretKey);
+
             console.log(`Token after successful login: ${token}`);
             return new ApiResponse(0, 'Login successful', { token });
         } 

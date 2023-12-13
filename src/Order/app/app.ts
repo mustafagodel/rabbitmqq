@@ -3,40 +3,42 @@ import { OrderService } from '../domain/Product/OrderService';
 import { inject, injectable } from 'inversify';
 import { OrderApplicationService } from '../appservices/OrderApplicationService';
 import jwt from 'jsonwebtoken';
-import { RabbitMQService } from '../../infrastructure/RabbitMQService';
+import { RabbitMQProvider } from '../../infrastructure/RabbitMQProvider';
 
 @injectable()
 export class OrderApp{
     private readonly orderAppService: OrderApplicationService;
 
+
     constructor(
         @inject(OrderService) private orderService: OrderService,
-        @inject('OrderRabbitMQServiceQueue') private OrderrabbitmqService: RabbitMQService,
+        @inject('OrderRabbitMQProviderQueue') public OrderrabbitMQProvider: RabbitMQProvider,
+        @inject('AggregatorRabbitMQProviderQueue') private aggregatorRabbitMQProviderQueue: RabbitMQProvider,
         @inject(OrderApplicationService) orderAppService: OrderApplicationService
     ) {
         this.orderAppService = orderAppService;
    
-
-        this.OrderrabbitmqService.onMessageReceived((message: string) => {
+        this.OrderrabbitMQProvider.onMessageReceived((message: string) => {
             this.handleMessage(message);
         });
+
     }
 
     public async handleMessage(message: string) { 
         const messageData = JSON.parse(message);
 
-        const func = this.functions[messageData.handler];
+        const func = this.functions[messageData.action];
 
         if (!func) {
             throw new Error('undefined method');
         }
      
-        return await func(this.orderAppService, messageData, this.OrderrabbitmqService);
+        return await func(this.orderAppService, messageData, this.aggregatorRabbitMQProviderQueue);
     }
 
 
     public functions = {
-        async createOrder(orderAppService: OrderApplicationService, messageData: any, rabbitmqService: RabbitMQService) {
+        async createOrder(orderAppService: OrderApplicationService, messageData: any, rabbitmqService: RabbitMQProvider) {
             const response = await orderAppService.createOrder(
                 messageData.orderId,
                 messageData.items,
@@ -52,10 +54,11 @@ export class OrderApp{
                     console.error('RabbitMQ connection or sending error:', error);
                 } 
                     console.log('Response message has been sent to RabbitMQ.');
-                
+              
             });
+       
         },
-        async updateOrder(orderAppService: OrderApplicationService, messageData: any, rabbitmqService: RabbitMQService) {
+        async updateOrder(orderAppService: OrderApplicationService, messageData: any, rabbitmqService: RabbitMQProvider) {
             const response = await orderAppService.updateOrder(
                 messageData.id,
                 messageData.orderId,
@@ -76,7 +79,7 @@ export class OrderApp{
             });
         },
         
-        async deleteOrder(orderAppService: OrderApplicationService, messageData: any, rabbitmqService: RabbitMQService) {
+        async deleteOrder(orderAppService: OrderApplicationService, messageData: any, rabbitmqService: RabbitMQProvider) {
             const response = await orderAppService.deleteOrder(messageData.id);
             const responseMessage = {
                 response: response,
@@ -92,7 +95,7 @@ export class OrderApp{
             });
         },
         
-        async getOrder(orderAppService: OrderApplicationService, messageData: any, rabbitmqService: RabbitMQService) {
+        async getOrder(orderAppService: OrderApplicationService, messageData: any, rabbitmqService: RabbitMQProvider) {
             const response = await orderAppService.getOrderById(messageData.id);
             const responseMessage = {
                 response: response,
@@ -108,7 +111,7 @@ export class OrderApp{
             });
         },
         
-        async getAllOrders(orderAppService: OrderApplicationService, messageData: any, rabbitmqService: RabbitMQService) {
+        async getAllOrders(orderAppService: OrderApplicationService, messageData: any, rabbitmqService: RabbitMQProvider) {
             const response = await orderAppService.getAllOrders();
             const responseMessage = {
                 response: response,

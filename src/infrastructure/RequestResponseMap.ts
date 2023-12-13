@@ -1,32 +1,32 @@
-import { RabbitMQService } from './RabbitMQService';
+import { RabbitMQProvider } from './RabbitMQProvider';
 import { inject, injectable } from 'inversify';
 
 @injectable()
 export class RequestResponseMap {
-  private requestMap: Record<string, RabbitMQService> = {};
+  private requestMap: Record<string, RabbitMQProvider> = {};
 
   constructor(
-    @inject('UserRabbitMQServiceQueue') UserrabbitmqService: RabbitMQService,
-    @inject('ProductRabbitMQServiceQueue') ProductrabbitmqService: RabbitMQService,
-    @inject('OrderRabbitMQServiceQueue') OrderrabbitmqService: RabbitMQService,
-    @inject('AggregatorRabbitMQServiceQueue') aggregatorRabbitMQServiceQueue: RabbitMQService
+    @inject('UserRabbitMQProviderQueue') userRabbitMQProviderQueue: RabbitMQProvider,
+    @inject('ProductRabbitMQProviderQueue') productRabbitMQProviderQueue: RabbitMQProvider,
+    @inject('OrderRabbitMQProviderQueue') orderRabbitMQProviderQueue: RabbitMQProvider,
+    @inject('AggregatorRabbitMQProviderQueue') aggregatorRabbitMQProviderQueue: RabbitMQProvider
   ) {
     this.requestMap = {
-      'login': UserrabbitmqService,
-      'register': UserrabbitmqService,
-      'create': ProductrabbitmqService,
-      'get': ProductrabbitmqService,
-      'delete': ProductrabbitmqService,
-      'getAll': ProductrabbitmqService,
-      'update': ProductrabbitmqService,
-      'createOrder':OrderrabbitmqService,
-      'updateOrder':OrderrabbitmqService,
-      'deleteOrder':OrderrabbitmqService,
-      'getOrder':OrderrabbitmqService,
-      'getAllOrders':OrderrabbitmqService,
-      'getname':OrderrabbitmqService,
-      'checkAndDecreaseStock':ProductrabbitmqService,
-      'handleMessageAction':aggregatorRabbitMQServiceQueue
+      'login': userRabbitMQProviderQueue,
+      'register': userRabbitMQProviderQueue,
+      'createProduct': productRabbitMQProviderQueue,
+      'getProduct': productRabbitMQProviderQueue,
+      'deleteProduct': productRabbitMQProviderQueue,
+      'getAllProduct': productRabbitMQProviderQueue,
+      'updateProduct': productRabbitMQProviderQueue,
+      'createOrder':orderRabbitMQProviderQueue,
+      'updateOrder':orderRabbitMQProviderQueue,
+      'deleteOrder':orderRabbitMQProviderQueue,
+      'getOrder':orderRabbitMQProviderQueue,
+      'getAllOrders':orderRabbitMQProviderQueue,
+      'getname':orderRabbitMQProviderQueue,
+      'checkAndDecreaseStock':productRabbitMQProviderQueue,
+      'handleMessageAction':aggregatorRabbitMQProviderQueue
     };
   }
 
@@ -35,7 +35,11 @@ export class RequestResponseMap {
     return action !== 'login' && action !== 'register';
   }
 
-  getRequestService(action: string): RabbitMQService | undefined {
+  requiresCustomerRole(action: string, userRole: string): boolean {
+    const CustomerRequiredActions = ['createOrder', 'updateOrder', 'deleteOrder', 'handleMessageAction','getOrder','getAllOrders'];
+    return CustomerRequiredActions.includes(action) && userRole !== 'customer';
+  }
+  getRequestService(action: string): RabbitMQProvider | undefined {
     return this.requestMap[action];
   }
 }

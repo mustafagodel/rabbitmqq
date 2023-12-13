@@ -1,125 +1,52 @@
 {
     "routes": [
       {
-        "action": "handleMessageAction",
-        "handler": "createOrder",
+        "action":"createOrder",
         "microservices": [
           {
             "name": "product",
-            "handler": "checkAndDecreaseStock",
-            "check": "necessary"
+            "actionMessage": "checkAndDecreaseStock"
           }
         ]
       }, 
        {
-        "action": "handleMessageAction",
-        "handler": "create",
-        "microservices": [
-          {
-            "name": "product",
-            "check": "notnecessary"
-          }
-        ]
+        "action": "createProduct"
+ 
       },
       {
-        "action": "handleMessageAction",
-        "handler": "update",
-        "microservices": [
-          {
-            "name": "product",
-            "check": "notnecessary"
-          }
-        ]
+        "action": "updateProduct"
+    
       },
       {
-        "action": "handleMessageAction",
-        "handler": "delete",
-        "microservices": [
-          {
-            "name": "product",
-            "check": "notnecessary"
-          }
-        ]
+        "action":"deleteProduct"
+    
       },
       {
-        "action": "handleMessageAction",
-        "handler": "get",
-        "microservices": [
-          {
-            "name": "product",
-            "check": "notnecessary"
-          }
-        ]
+        "action": "getProduct"
+       
       },
       {
-        "action": "handleMessageAction",
-        "handler": "getAll",
-        "microservices": [
-          {
-            "name": "product",
-            "check": "notnecessary"
-          }
-        ]
+        "action":"getAllProduct"
+   
       },
       {
-        "action": "handleMessageAction",
-        "handler": "updateOrder",
-        "microservices": [
-          {
-            "name": "order",
-            "check": "notnecessary"
-          }
-        ]
+        "action": "updateOrder"
       },
       {
-        "action": "handleMessageAction",
-        "handler": "deleteOrder",
-        "microservices": [
-          {
-            "name": "order",
-            "check": "notnecessary"
-          }
-        ]
+        "action":"deleteOrder"
       },
       {
-        "action": "handleMessageAction",
-        "handler": "getOrder",
-        "microservices": [
-          {
-            "name": "order",
-            "check": "notnecessary"
-          }
-        ]
+        "action":"getOrder"
       }, 
       {
-        "action": "handleMessageAction",
-        "handler": "getAllOrders",
-        "microservices": [
-          {
-            "name": "order",
-            "check": "notnecessary"
-          }
-        ]
+        "action": "getAllOrders"
+    
       },
       {
-        "action": "handleMessageAction",
-        "handler": "login",
-        "microservices": [
-          {
-            "name": "auth",
-            "check": "notnecessary"
-          }
-        ]
+        "action": "login"
       },
       {
-        "action": "handleMessageAction",
-        "handler": "register",
-        "microservices": [
-          {
-            "name": "auth",
-            "check": "notnecessary"
-          }
-        ]
+        "action": "register"
       }
     ]
   }

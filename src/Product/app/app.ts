@@ -4,7 +4,7 @@ import { id, inject, injectable } from 'inversify';
 import express from 'express';
 import { ApiResponse } from '../../infrastructure/ApiResponse';
 import { ProductApplicationService } from '../appservices/ProductApplicationService';
-import { RabbitMQService } from '../../infrastructure/RabbitMQService';
+import { RabbitMQProvider } from '../../infrastructure/RabbitMQProvider';
 import 'reflect-metadata';
 import { OrderItem } from '../../Order/domain/Product/Order';
 @injectable()
@@ -15,14 +15,15 @@ export class ProductApp {
 
     constructor(
         @inject(ProductService) private productService: ProductService,
-        @inject('ProductRabbitMQServiceQueue') private productrabbitmqService: RabbitMQService,
+        @inject('ProductRabbitMQProviderQueue') private productrabbitMQProvider: RabbitMQProvider,
         @inject(ProductApplicationService) private productApplicationService: ProductApplicationService,
+        @inject('AggregatorRabbitMQProviderQueue') private aggregatorRabbitMQProviderQueue: RabbitMQProvider,
     ) {
         this.router = express.Router();
         this.productAppService = productApplicationService;
-        this.productrabbitmqService = productrabbitmqService;
+        this.productrabbitMQProvider = productrabbitMQProvider;
 
-        this.productrabbitmqService.onMessageReceived((message: string) => {
+        this.productrabbitMQProvider.onMessageReceived((message: string) => {
             this.handleMessage(message);
         });
     }
@@ -30,7 +31,7 @@ export class ProductApp {
     public async handleMessage(message: string) {
         const messageData = JSON.parse(message);
 
-        const func = this.functions[messageData.handler];
+        const func = this.functions[messageData.action];
 
         if(!func) {
 
@@ -38,7 +39,7 @@ export class ProductApp {
          
         }
 
-        return await func(this.productApplicationService, messageData, this.productrabbitmqService);
+        return await func(this.productApplicationService, messageData, this.aggregatorRabbitMQProviderQueue);
     }
 
 
@@ -47,7 +48,7 @@ export class ProductApp {
 
        
     public  functions = {
-        async create(productAppService: ProductApplicationService, messageData: any, rabbitmqService: RabbitMQService) {
+        async createProduct(productAppService: ProductApplicationService, messageData: any, rabbitmqService: RabbitMQProvider) {
 
             const existingProduct = await productAppService.getProductByName(messageData.name);
             
@@ -69,7 +70,9 @@ export class ProductApp {
                         console.error('RabbitMQ connection or sending error:', error);
                     } else {
                         console.log('The response message has been sent to RabbitMQ.');
+      
                     }
+                    
                 });
             } else {
                 const createResult = await productAppService.createProduct(
@@ -94,7 +97,7 @@ export class ProductApp {
                 });
             }
         },
-        async update(productAppService: ProductApplicationService, messageData: any, rabbitmqService: RabbitMQService) {
+        async updateProduct(productAppService: ProductApplicationService, messageData: any, rabbitmqService: RabbitMQProvider) {
             const createResult = await productAppService.updateProduct(
                 messageData.id,
                 messageData.type,
@@ -117,7 +120,7 @@ export class ProductApp {
                      console.log('The response message has been sent to RabbitMQ.');
                 }
             });
-        }, async delete(productAppService: ProductApplicationService, messageData: any, rabbitmqService: RabbitMQService) {
+        }, async deleteProduct(productAppService: ProductApplicationService, messageData: any, rabbitmqService: RabbitMQProvider) {
             const createResult = await productAppService.deleteProduct(
                 messageData.id,
             );
@@ -136,7 +139,7 @@ export class ProductApp {
                     console.log('The response message has been sent to RabbitMQ.');
                 }
             });
-        }, async get(productAppService: ProductApplicationService, messageData: any, rabbitmqService: RabbitMQService) {
+        }, async getProduct(productAppService: ProductApplicationService, messageData: any, rabbitmqService: RabbitMQProvider) {
             const createResult = await productAppService.getProductById(
                 messageData.id,
             );
@@ -154,7 +157,7 @@ export class ProductApp {
                     console.log('Response mesajı RabbitMQ\'ya gönderildi.');
                 }
             });
-        }, async getAll(productAppService: ProductApplicationService, messageData: any, rabbitmqService: RabbitMQService) {
+        }, async getAllProduct(productAppService: ProductApplicationService, messageData: any, rabbitmqService: RabbitMQProvider) {
             const createResult = await productAppService.getAllProducts();
     
             const responseMessage = {
@@ -189,11 +192,13 @@ export class ProductApp {
                 return 'error';
             }
             const stockAsNumber = parseFloat(stockAsString);
- 
-            if (product.data.stock >= stockAsNumber) {
+       
+            
+            if (product.data.stock >= stockAsNumber&&stockAsNumber*product.data.price==messageData.price) {
                 product.data.stock -= stockAsNumber;
                 await this.productAppService.updateProduct(product.data.id,product.data.type,productName,product.data.price,product.data.stock);
-                return 'succes';
+              
+                return "succes";
         
               
             } else {
@@ -201,7 +206,7 @@ export class ProductApp {
             }
         }
     
-    async getname(productAppService: ProductApplicationService, messageData: any, rabbitmqService: RabbitMQService) {
+    async getNameProduct(productAppService: ProductApplicationService, messageData: any, rabbitmqService: RabbitMQProvider) {
         const createResult = await productAppService.getProductByName(
             messageData.name,
         );

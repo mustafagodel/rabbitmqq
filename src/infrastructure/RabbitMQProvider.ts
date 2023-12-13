@@ -1,29 +1,35 @@
-import amqplib from 'amqplib/callback_api';
+import amqplib, { Channel, Connection, Message } from 'amqplib/callback_api';
 import { injectable } from 'inversify';
 
 @injectable()
-export class RabbitMQService {
-    private channel: amqplib.Channel | undefined;
-    private isConsuming: boolean = false;
+export class RabbitMQProvider {
+    private connection: Connection | undefined;
+    private channel: Channel | undefined;
     private queueName: string;
     private messageHandler: (message: string) => void;
-    private consumerTag: string | undefined;
 
     constructor(rabbitmqServer: string, queueName: string) {
         this.queueName = queueName;
-        this.messageHandler = (_message: string) => {};
-        this.consumerTag = undefined;
+        this.messageHandler = (_message: string) => {
+            console.log('Message handler is set up.' + _message);
+        };
 
+        this.createConnection(rabbitmqServer);
+    }
+
+    private createConnection(rabbitmqServer: string) {
         amqplib.connect(rabbitmqServer, (error, connection) => {
             if (error) {
                 console.error('RabbitMQ connection error:', error);
                 return;
             }
 
+            this.connection = connection;
+
             connection.createChannel((error, channel) => {
                 if (error) {
                     console.error('RabbitMQ channel creation error:', error);
-                    connection.close();
+                    this.closeConnection();
                     return;
                 }
 
@@ -39,33 +45,36 @@ export class RabbitMQService {
         this.messageHandler = callback;
     }
 
-    public removeMessageListener() {
-        if (this.consumerTag && this.channel) {
-            this.channel.cancel(this.consumerTag);
-            this.consumerTag = undefined;
-            console.log('Message listener removed.');
+    public closeConnection() {
+        if (this.connection) {
+            this.connection.close((error) => {
+                if (error) {
+                    console.error('Error closing RabbitMQ connection:', error);
+                } else {
+                    console.log('RabbitMQ connection closed.');
+                }
+            });
         }
     }
 
-    private startConsumingMessages(channel: amqplib.Channel) {
-        if (this.isConsuming) {
-            console.log('Already processing the messages.');
-            return;
+    public closeChannel() {
+        if (this.channel) {
+            this.channel.close((error) => {
+                if (error) {
+                    console.error('Error closing RabbitMQ channel:', error);
+                } else {
+                    console.log('RabbitMQ channel closed.');
+                }
+            });
         }
-        this.isConsuming = true;
+    }
 
-        channel.consume(this.queueName, (message) => {
+    private startConsumingMessages(channel: Channel) {
+        channel.consume(this.queueName, (message: Message | null) => {
             if (message) {
                 const content = message.content.toString();
                 this.messageHandler(content);
                 channel.ack(message);
-
-                if (content === 'stopConsuming') {
-                    console.log('Stopping message consumption.');
-                    this.isConsuming = false;
-                    this.removeMessageListener();
-                   
-                }
             }
         });
     }
@@ -80,18 +89,5 @@ export class RabbitMQService {
         this.channel.sendToQueue(this.queueName, Buffer.from(message));
         console.log('The request was received sent RabbitMQ', message);
         callback(null);
-    }
-
-    public closeChannel() {
-        if (this.channel) {
-            this.channel.close((error) => {
-                if (error) {
-                    console.error('Error closing RabbitMQ channel:', error);
-                } else {
-                    console.log('RabbitMQ channel closed.');
-                    this.isConsuming = false;
-                }
-            });
-        }
     }
 }

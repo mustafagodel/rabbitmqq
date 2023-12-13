@@ -18,7 +18,7 @@ const AuthMiddleware = (req: Request, res: Response, next: NextFunction) => {
     try {
          const requestData = req.body;
          if (requestData) {
-            if (requestData.handler === 'login' || requestData.handler === 'register') {
+            if (requestData.action === 'login' || requestData.action=== 'register') {
                 req.user = null;
                 return next();
             }

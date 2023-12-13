@@ -3,7 +3,7 @@ import * as crypto from 'crypto';
 import { injectable } from 'inversify';
 
 @injectable()
-export class PasswordService {
+export class SecurityExtension {
     hashPassword(password: string): string {
         const hash = crypto.createHash('sha256');
         hash.update(password);
@@ -11,4 +11,4 @@ export class PasswordService {
     }
 }
 
-export default PasswordService;
+export default SecurityExtension;

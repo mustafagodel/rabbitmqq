@@ -5,15 +5,14 @@ import { Container } from 'inversify';
 import configureContainer from '../infrastructure/inversify.config';
 import { AuthApp } from '../Auth/app/app.js';
 import { OrderApp } from '../Order/app/app';
-import Middleware from '../middleware/ExecptionMiddleware';
+import ExecptionMiddleware from '../middleware/ExecptionMiddleware';
 import  AuthMiddleware  from '../middleware/AuthMiddleware';
-import PasswordService from '../infrastructure/PasswordService';
-import { RabbitMQService } from '../infrastructure/RabbitMQService'; 
+import { RabbitMQProvider } from '../infrastructure/RabbitMQProvider'; 
 import { ProductApp } from '../Product/app/app';
 import { RequestResponseMap } from '../infrastructure/RequestResponseMap';  
 
 require('dotenv').config();
-import jwt from 'jsonwebtoken';
+import jwt, { JwtPayload } from 'jsonwebtoken';
 import { Aggregator } from '../infrastructure/Aggregator';
 import { Response } from 'express-serve-static-core';
 const app = express();
@@ -26,60 +25,67 @@ configureContainer(container);
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(Middleware);
+app.use(ExecptionMiddleware);
 app.use(AuthMiddleware);
+
+container.get<Aggregator>(Aggregator);
 container.get<AuthApp>(AuthApp);
 container.get<ProductApp>(ProductApp);
 container.get<OrderApp>(OrderApp);
+
 const requestResponseMap = container.get<RequestResponseMap>(RequestResponseMap);
-process.env.SECRET_KEY as string; 
-container.get<Aggregator>(Aggregator);
-
-
-
-
-app.post('/api/deneme', (req, res) => {
+app.post('/api', (req, res) => {
   const requestData = req.body;
-  const rabbitmqServiceToUse = requestResponseMap.getRequestService(requestData.action);
-  
+  const rabbitmqServiceToUse = requestResponseMap.getRequestService('handleMessageAction');
 
   if (!rabbitmqServiceToUse) {
     return res.status(400).json({ error: 'Invalid action' });
   }
-
-  if (!requestResponseMap.requiresToken(requestData.handler)) {
-    sendResponseToClient(res,rabbitmqServiceToUse,requestData);
-  
+  if (!requestResponseMap.requiresToken(requestData.action)) {
+    sendResponseToClient(res, rabbitmqServiceToUse, requestData);
   } else {
-    const userToken = req.headers.authorization;
-    if (userToken && typeof userToken === 'string') {
-      sendResponseToClient(res,rabbitmqServiceToUse,requestData);
-  
+    const userToken = req.headers.authorization?.split(' ')[1];
+   if (userToken && typeof userToken === 'string') {
+    sendResponseToClient(res, rabbitmqServiceToUse, requestData);
     } else {
+      console.error('Invalid token: Token is missing or not a string.');
       res.status(401).json({ error: 'Unauthorized' });
     }
   }
-   
 });
 
-const sendResponseToClient = (res: Response<any, Record<string, any>, number>, rabbitmqServiceToUse: RabbitMQService, requestData: any) => {
-  const rabbitmqServiceToUsehandler = requestResponseMap.getRequestService(requestData.handler);
+
+const sendResponseToClient = (
+  res: Response<any, Record<string, any>, number>,
+  rabbitmqServiceToUse: RabbitMQProvider,
+  requestData: { action: string }
+) => {
+  const rabbitmqServiceToUsehandler = requestResponseMap.getRequestService(requestData.action);
   const responseMessageText = JSON.stringify(requestData);
+  
+
+
   rabbitmqServiceToUse.sendMessage(responseMessageText, (error) => {
-    
     if (error) {
-      console.log('RabbitMQ is connected or Sending error:', error);
-    }
-    console.log('The Request was received and Sent to RabbitMQ');
-    rabbitmqServiceToUsehandler?.onMessageReceived((message) => {
-      const responseMessageText = JSON.parse(message);
-      res.status(200).json(responseMessageText);
-
-    });
+      console.log('RabbitMQ Sending error:', error);
+      res.status(500).json({ error: 'Internal Server Error' });
+      return;
+    } 
+        console.log('The Request was received and Sent to RabbitMQ');
      
+      
   });
+  rabbitmqServiceToUse.onMessageReceived((message) => {
+    const responseMessageText = JSON.parse(message);
+    res.status(200).json(responseMessageText);
+});
 
-}
+
+
+
+};
+
+
 
  
 
