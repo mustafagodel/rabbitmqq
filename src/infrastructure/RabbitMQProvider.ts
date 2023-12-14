@@ -75,6 +75,7 @@ export class RabbitMQProvider {
                 const content = message.content.toString();
                 this.messageHandler(content);
                 channel.ack(message);
+                 
             }
         });
     }

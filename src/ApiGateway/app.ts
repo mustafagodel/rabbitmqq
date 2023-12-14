@@ -28,31 +28,42 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(ExecptionMiddleware);
 app.use(AuthMiddleware);
 
-container.get<Aggregator>(Aggregator);
+
+
 container.get<AuthApp>(AuthApp);
 container.get<ProductApp>(ProductApp);
 container.get<OrderApp>(OrderApp);
-
+container.get<Aggregator>(Aggregator);
 const requestResponseMap = container.get<RequestResponseMap>(RequestResponseMap);
 app.post('/api', (req, res) => {
   const requestData = req.body;
   const rabbitmqServiceToUse = requestResponseMap.getRequestService('handleMessageAction');
 
   if (!rabbitmqServiceToUse) {
-    return res.status(400).json({ error: 'Invalid action' });
+      return res.status(400).json({ error: 'Invalid action' });
   }
+
   if (!requestResponseMap.requiresToken(requestData.action)) {
-    sendResponseToClient(res, rabbitmqServiceToUse, requestData);
-  } else {
-    const userToken = req.headers.authorization?.split(' ')[1];
-   if (userToken && typeof userToken === 'string') {
-    sendResponseToClient(res, rabbitmqServiceToUse, requestData);
-    } else {
+      sendResponseToClient(res, rabbitmqServiceToUse, requestData);
+      return;
+  }
+
+  const userToken = req.headers.authorization?.split(' ')[1];
+
+  if (!userToken || typeof userToken !== 'string') {
       console.error('Invalid token: Token is missing or not a string.');
-      res.status(401).json({ error: 'Unauthorized' });
-    }
+      return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  const roleToken = jwt.verify(userToken, process.env.SECRET_KEY as string) as JwtPayload;
+
+  if (!requestResponseMap.requiresCustomerRole(requestData.action, roleToken.role) || roleToken.role === 'admin') {
+      sendResponseToClient(res, rabbitmqServiceToUse, requestData);
+  } else {
+      res.status(401).json({ error: 'Not a valid role' });
   }
 });
+
 
 
 const sendResponseToClient = (

@@ -23,26 +23,44 @@ import { Aggregator } from '../infrastructure/Aggregator';
 
 
 const configureContainer = (container: Container) => {
-container.bind<MongoDBConnector>(MongoDBConnector).to(MongoDBConnector);
-container.bind<UserRepository>(UserRepository).to(UserRepository);
-container.bind<UserApplicationService>(UserApplicationService).to(UserApplicationService);
-container.bind<UserService>(UserService).to(UserService);
-container.bind<AuthApp>(AuthApp).to(AuthApp);
-container.bind<PasswordService>(PasswordService).to(PasswordService);
-container.bind<ProductApplicationService>(ProductApplicationService).to(ProductApplicationService);
-container.bind<ProductApp>(ProductApp).to(ProductApp);
-container.bind<Product>(Product).to(Product);
-container.bind<ProductRepository>(ProductRepository).to(ProductRepository);
-container.bind<ProductService>(ProductService).to(ProductService);
-container.bind<Aggregator>(Aggregator).to(Aggregator);
+container.bind<MongoDBConnector>(MongoDBConnector).to(MongoDBConnector).inRequestScope();
+
+container.bind<UserRepository>(UserRepository).to(UserRepository).inRequestScope();
+
+container.bind<UserApplicationService>(UserApplicationService).to(UserApplicationService).inRequestScope();
+
+container.bind<UserService>(UserService).to(UserService).inRequestScope();
+
+container.bind<AuthApp>(AuthApp).to(AuthApp).inRequestScope();
+
+container.bind<PasswordService>(PasswordService).to(PasswordService).inRequestScope();
+
+container.bind<ProductApplicationService>(ProductApplicationService).to(ProductApplicationService).inRequestScope();
+
+container.bind<ProductApp>(ProductApp).to(ProductApp).inRequestScope();
+
+container.bind<Product>(Product).to(Product).inRequestScope();
+
+container.bind<ProductRepository>(ProductRepository).to(ProductRepository).inRequestScope();
+
+container.bind<ProductService>(ProductService).to(ProductService).inRequestScope();
+
+container.bind<Aggregator>(Aggregator).to(Aggregator).inRequestScope();
 
 
-container.bind<Order>(Order).to(Order);
-container.bind<OrderRepository>(OrderRepository).to(OrderRepository);
-container.bind<OrderService>(OrderService).to(OrderService);
-container.bind<OrderApplicationService>(OrderApplicationService).to(OrderApplicationService);
-container.bind<OrderApp>(OrderApp).to(OrderApp);
-container.bind<RequestResponseMap>(RequestResponseMap).to(RequestResponseMap);
+
+container.bind<Order>(Order).to(Order).inRequestScope();
+
+container.bind<OrderRepository>(OrderRepository).to(OrderRepository).inRequestScope();
+
+container.bind<OrderService>(OrderService).to(OrderService).inRequestScope();
+
+container.bind<OrderApplicationService>(OrderApplicationService).to(OrderApplicationService).inRequestScope();
+
+container.bind<OrderApp>(OrderApp).to(OrderApp).inRequestScope();
+
+container.bind<RequestResponseMap>(RequestResponseMap).to(RequestResponseMap).inRequestScope();
+
 
 container.bind<RabbitMQProvider>('UserRabbitMQProviderQueue').toDynamicValue(() => {
   return new RabbitMQProvider('amqp://localhost', 'UserQueue');
@@ -59,6 +77,7 @@ container.bind<RabbitMQProvider>('OrderRabbitMQProviderQueue').toDynamicValue(()
 container.bind<RabbitMQProvider>('AggregatorRabbitMQProviderQueue').toDynamicValue(() => {
   return new RabbitMQProvider('amqp://localhost', 'AggregatorQueue');
 }).inRequestScope();
+
 
 
 
