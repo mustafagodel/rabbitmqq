@@ -9,7 +9,8 @@ export class RequestResponseMap {
     @inject('UserRabbitMQProviderQueue') userRabbitMQProviderQueue: RabbitMQProvider,
     @inject('ProductRabbitMQProviderQueue') productRabbitMQProviderQueue: RabbitMQProvider,
     @inject('OrderRabbitMQProviderQueue') orderRabbitMQProviderQueue: RabbitMQProvider,
-    @inject('AggregatorRabbitMQProviderQueue') aggregatorRabbitMQProviderQueue: RabbitMQProvider
+    @inject('AggregatorRabbitMQProviderQueue') aggregatorRabbitMQProviderQueue: RabbitMQProvider,
+    @inject('ReturnRabbitMQProviderQueue') returnRabbitMQProviderQueue: RabbitMQProvider
   ) {
     this.requestMap = {
       'login': userRabbitMQProviderQueue,
@@ -26,7 +27,8 @@ export class RequestResponseMap {
       'getAllOrders':orderRabbitMQProviderQueue,
       'getname':orderRabbitMQProviderQueue,
       'checkAndDecreaseStock':productRabbitMQProviderQueue,
-      'handleMessageAction':aggregatorRabbitMQProviderQueue
+      'handleMessageAction':aggregatorRabbitMQProviderQueue,
+      'createReturn':returnRabbitMQProviderQueue
     };
   }
 
@@ -36,7 +38,7 @@ export class RequestResponseMap {
   }
 
   requiresCustomerRole(action: string, userRole: string): boolean {
-    const CustomerRequiredActions = ['createOrder', 'updateOrder', 'deleteOrder', 'handleMessageAction','getOrder','getAllOrders'];
+    const CustomerRequiredActions = ['createOrder', 'updateOrder', 'deleteOrder', 'handleMessageAction','getOrder','getAllOrders','createReturn'];
     return CustomerRequiredActions.includes(action) && userRole !== 'customer';
   }
   getRequestService(action: string): RabbitMQProvider | undefined {

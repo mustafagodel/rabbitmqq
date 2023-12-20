@@ -15,6 +15,11 @@ import { ProductService } from '../Product/domain/Product/ProductService';
 import { RabbitMQProvider } from '../infrastructure/RabbitMQProvider';
 import { RequestResponseMap } from '../infrastructure/RequestResponseMap';  
 import { Order } from '../Order/domain/Product/Order';  
+import { Return } from '../Return/domain/Return/Return';  
+import { ReturnService } from '../Return/domain/Return/ReturnService';  
+import { ReturnRepository } from '../Return/domain/Return/ReturnRepository';  
+import { ReturnApplicationService } from '../Return/appservices/ReturnApplicationService';  
+import { ReturnApp } from '../Return/app/app';  
 import { OrderRepository } from '../Order/domain/Product/OrderRepository';  
 import { OrderService } from '../Order/domain/Product/OrderService';  
 import { OrderApplicationService } from '../Order/appservices/OrderApplicationService';  
@@ -62,6 +67,17 @@ container.bind<OrderApp>(OrderApp).to(OrderApp).inRequestScope();
 container.bind<RequestResponseMap>(RequestResponseMap).to(RequestResponseMap).inRequestScope();
 
 
+container.bind<Return>(Return).to(Return).inRequestScope();
+
+container.bind<ReturnService>(ReturnService).to(ReturnService).inRequestScope();
+
+container.bind<ReturnRepository>(ReturnRepository).to(ReturnRepository).inRequestScope();
+
+container.bind<ReturnApplicationService>(ReturnApplicationService).to(ReturnApplicationService).inRequestScope();
+
+container.bind<ReturnApp>(ReturnApp).to(ReturnApp).inRequestScope();
+
+
 container.bind<RabbitMQProvider>('UserRabbitMQProviderQueue').toDynamicValue(() => {
   return new RabbitMQProvider('amqp://localhost', 'UserQueue');
 }).inRequestScope();
@@ -76,6 +92,9 @@ container.bind<RabbitMQProvider>('OrderRabbitMQProviderQueue').toDynamicValue(()
 
 container.bind<RabbitMQProvider>('AggregatorRabbitMQProviderQueue').toDynamicValue(() => {
   return new RabbitMQProvider('amqp://localhost', 'AggregatorQueue');
+}).inRequestScope();
+container.bind<RabbitMQProvider>('ReturnRabbitMQProviderQueue').toDynamicValue(() => {
+  return new RabbitMQProvider('amqp://localhost', 'ReturnQueue');
 }).inRequestScope();
 
 

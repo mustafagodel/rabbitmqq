@@ -9,6 +9,7 @@ import ExecptionMiddleware from '../middleware/ExecptionMiddleware';
 import  AuthMiddleware  from '../middleware/AuthMiddleware';
 import { RabbitMQProvider } from '../infrastructure/RabbitMQProvider'; 
 import { ProductApp } from '../Product/app/app';
+import { ReturnApp } from '../Return/app/app';
 import { RequestResponseMap } from '../infrastructure/RequestResponseMap';  
 
 require('dotenv').config();
@@ -29,11 +30,11 @@ app.use(ExecptionMiddleware);
 app.use(AuthMiddleware);
 
 
-
+container.get<Aggregator>(Aggregator);
 container.get<AuthApp>(AuthApp);
 container.get<ProductApp>(ProductApp);
 container.get<OrderApp>(OrderApp);
-container.get<Aggregator>(Aggregator);
+container.get<ReturnApp>(ReturnApp);
 const requestResponseMap = container.get<RequestResponseMap>(RequestResponseMap);
 app.post('/api', (req, res) => {
   const requestData = req.body;
@@ -71,11 +72,7 @@ const sendResponseToClient = (
   rabbitmqServiceToUse: RabbitMQProvider,
   requestData: { action: string }
 ) => {
-  const rabbitmqServiceToUsehandler = requestResponseMap.getRequestService(requestData.action);
   const responseMessageText = JSON.stringify(requestData);
-  
-
-
   rabbitmqServiceToUse.sendMessage(responseMessageText, (error) => {
     if (error) {
       console.log('RabbitMQ Sending error:', error);

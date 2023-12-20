@@ -6,6 +6,7 @@ import { RequestResponseMap } from '../infrastructure/RequestResponseMap';
 import { inject, injectable } from 'inversify';
 import { OrderApp } from '../Order/app/app';
 import { AuthApp } from '../Auth/app/app';
+import { ReturnApp } from '../Return/app/app';
 
 @injectable()
 export class Aggregator {
@@ -17,9 +18,12 @@ export class Aggregator {
     @inject(ProductApp) private productApp: ProductApp,
     @inject(OrderApp) private orderApp: OrderApp,
     @inject(AuthApp) private authApp: AuthApp,
+
+    @inject(ReturnApp) private returnApp: AuthApp,
+ 
     @inject(RequestResponseMap) private requestResponseMap: RequestResponseMap
 ) {
-
+  this.returnApp = returnApp;
     this.productApp = productApp;
     this.orderApp = orderApp;
     this.authApp = authApp;
