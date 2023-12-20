@@ -2,15 +2,12 @@ import { injectable } from 'inversify';
 
 @injectable()
 export class Return {
-    orderID: string | undefined;
     returnReason: string | undefined;
     isDefective: boolean = false;
     returnDate: Date | undefined;
-    returnItems: any[];
 
-    constructor(items: any[], returnReason?: string, isDefective?: boolean, returnDate?: Date) {
-        this.returnItems = items;
 
+    constructor( public items: Returnitems[], returnReason?: string, isDefective?: boolean, returnDate?: Date) {
         this.returnReason = returnReason;
         this.isDefective = isDefective || false;
         this.returnDate = returnDate;
@@ -29,4 +26,7 @@ export class Return {
     setReturnDate(returnDate: Date): void {
         this.returnDate = returnDate;
     }
+}
+export class Returnitems {
+    constructor(public productname: string, public quantity: number) {}
 }

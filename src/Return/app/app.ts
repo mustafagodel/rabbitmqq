@@ -41,7 +41,7 @@ export class ReturnApp {
     public  functions = {
 
         async createReturn(returnAppService: ReturnApplicationService, messageData: any, rabbitmqService: RabbitMQProvider) {
-            const createResult = await returnAppService.createReturn( messageData.returnReason, messageData.isDefective,  messageData.returnDate, messageData.items);
+            const createResult = await returnAppService.createReturn( messageData.returnReason, messageData.isDefective,  messageData.returnDate, messageData.returnItems);
 
             const responseMessage = {
                 response: createResult,

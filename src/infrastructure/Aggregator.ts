@@ -78,7 +78,7 @@ export class Aggregator {
       }
 
       for (const microservice of route.microservices) {
-        const { name, actionMessage, check } = microservice;
+        const { name, actionMessage } = microservice;
         const microserviceController = this.getMicroserviceController(name);
 
         if (!microserviceController) {

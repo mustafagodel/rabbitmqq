@@ -1,12 +1,13 @@
 import { injectable } from 'inversify';
 import { ReturnService } from '../domain/Return/ReturnService';
 import { ApiResponse } from '../../infrastructure/ApiResponse';
+import { Returnitems } from '../domain/Return/Return';
 
 @injectable()
 export class ReturnApplicationService {
     constructor(private returnService: ReturnService) {}
 
-    async createReturn( returnReason: string, isDefective: boolean, returnDate: Date, items: any[]): Promise<ApiResponse<any>> {
+    async createReturn( returnReason: string, isDefective: boolean, returnDate: Date, items: Returnitems[]): Promise<ApiResponse<any>> {
         const createdReturn = await this.returnService.createReturn( returnReason, isDefective, returnDate, items);
 
         if (createdReturn) {
