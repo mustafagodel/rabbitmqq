@@ -19,10 +19,6 @@ export class Return {
         this.returnReason = returnReason;
     }
 
-    markAsDefective(): void {
-        this.isDefective = true;
-    }
-
     setReturnDate(returnDate: Date): void {
         this.returnDate = returnDate;
     }
