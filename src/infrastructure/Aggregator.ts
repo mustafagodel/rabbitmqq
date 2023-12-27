@@ -7,7 +7,6 @@ import { inject, injectable } from 'inversify';
 import { OrderApp } from '../Order/app/app';
 import { AuthApp } from '../Auth/app/app';
 import { ReturnApp } from '../Return/app/app';
-import { stringify } from 'querystring';
 
 @injectable()
 export class Aggregator {
@@ -39,6 +38,7 @@ export class Aggregator {
 
 }
   public async handleMessageAction(message: string,) {
+
 
     const requestData = 
     JSON.parse(message);

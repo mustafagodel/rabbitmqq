@@ -3,10 +3,6 @@ import { injectable } from 'inversify';
 
 @injectable()
 export class RabbitMQProvider {
-    getChannel(): amqplib.Channel {
-      throw new Error('Method not implemented.');
-    }
-    
     private connection: Connection | undefined;
     private channel: Channel | undefined;
     private queueName: string;
@@ -18,10 +14,9 @@ export class RabbitMQProvider {
     constructor(rabbitmqServer: string, queueName: string) {
         this.queueName = queueName;
         this.messageHandler = (message: string) => {};
-
+  
         this.createConnection(rabbitmqServer);
     }
-
 
     private createConnection(rabbitmqServer: string) {
         if (this.isConnectionCreated) {
@@ -44,16 +39,22 @@ export class RabbitMQProvider {
                     this.closeChannel();
                     return;
                 }
-
+            
                 this.channel = channel;
                 channel.assertQueue(this.queueName, { durable: false });
+                
+                // Sadece bir mesajın işlenmesini sağla
+                channel.prefetch(1);
+            
                 console.log(`Listening for messages in ${this.queueName}...`);
                 this.startConsumingMessages(channel);
-
+            
                 this.isConnectionCreated = true;
             });
+            // ..
         });
     }
+
     public onMessageReceived(callback: (message: string) => void) {
         try {
             this.messageHandler = callback;
@@ -85,29 +86,25 @@ export class RabbitMQProvider {
             });
         }
     }
-
     public startConsumingMessages(channel: Channel) {
         if (!this.isConsuming) {
-         
+            channel.consume(this.queueName, (message: Message | null) => {
+                if (message) {
+                    const content = message.content.toString();
+                    console.log(`Received message: ${content}`);
     
-
-            channel.consume(
-                this.queueName,
-                (msg) => {
-                  if (msg) {
-                    const message = msg.content.toString();
-                    console.log(`Received message: ${message}`);
-            
-                    channel.ack(msg);
-            
-              
-                  }
-                },
-                { noAck: false } 
-              );
-              this.isConsuming = true;
+                    this.messageHandler(content);
+                    
+                    
+                    channel.ack(message);
+                    console.log('Acknowledgment sent.');
+                }
+            });
+    
+            this.isConsuming = true;
         }
     }
+    
 
     public sendMessage(message: string, callback: (error: any) => void) {
         if (!this.channel) {
@@ -117,11 +114,26 @@ export class RabbitMQProvider {
         }
 
         this.channel.sendToQueue(this.queueName, Buffer.from(message));
-        console.log('The request was sent to RabbitMQ', message);
+        console.log(`Sent message: ${message}`);
 
-    
-        
         callback(null);
     }
-}
 
+    public clearQueue(callback: (error: any) => void) {
+        if (!this.channel) {
+            console.error('The channel has not been created.');
+            callback('The channel has not been created error');
+            return;
+        }
+
+        this.channel.purgeQueue(this.queueName, (error) => {
+            if (error) {
+                console.error('Error purging queue:', error);
+                callback(error);
+            } else {
+                console.log('Queue purged successfully.');
+                callback(null);
+            }
+        });
+    }
+}
