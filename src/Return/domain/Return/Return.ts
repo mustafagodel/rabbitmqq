@@ -7,10 +7,10 @@ export class Return {
     returnDate: Date | undefined;
 
 
-    constructor( public items: Returnitems[], returnReason?: string, isDefective?: boolean, returnDate?: Date) {
+    constructor( public items: Returnitems[], returnReason?: string, isDefective?: boolean) {
         this.returnReason = returnReason;
         this.isDefective = isDefective || false;
-        this.returnDate = returnDate;
+        this.returnDate = new Date(); 
     }
 
    

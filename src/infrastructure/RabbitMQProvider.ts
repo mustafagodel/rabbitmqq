@@ -54,10 +54,12 @@ export class RabbitMQProvider {
             });
         });
     }
-
-
     public onMessageReceived(callback: (message: string) => void) {
-        this.messageHandler = callback;
+        try {
+            this.messageHandler = callback;
+        } catch (error) {
+            console.error('Error in onMessageReceived:', error);
+        }
     }
 
     public closeConnection() {
@@ -92,10 +94,10 @@ export class RabbitMQProvider {
                     this.messageHandler(content);
                     channel.ack(message);
                 }
+                
             });
-
+    
             this.isConsuming = true;
-         
         }
     }
 

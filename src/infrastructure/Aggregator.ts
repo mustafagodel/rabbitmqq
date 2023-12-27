@@ -7,6 +7,7 @@ import { inject, injectable } from 'inversify';
 import { OrderApp } from '../Order/app/app';
 import { AuthApp } from '../Auth/app/app';
 import { ReturnApp } from '../Return/app/app';
+import { stringify } from 'querystring';
 
 @injectable()
 export class Aggregator {
@@ -18,8 +19,9 @@ export class Aggregator {
     @inject(ProductApp) private productApp: ProductApp,
     @inject(OrderApp) private orderApp: OrderApp,
     @inject(AuthApp) private authApp: AuthApp,
+    
 
-    @inject(ReturnApp) private returnApp: AuthApp,
+    @inject(ReturnApp) private returnApp: ReturnApp,  
  
     @inject(RequestResponseMap) private requestResponseMap: RequestResponseMap
 ) {
@@ -66,11 +68,11 @@ export class Aggregator {
         console.log('messageText before sending:', responseMessageText);
         rabbitmqServiceToUse?.sendMessage(responseMessageText, (error) => {
           if (error) {
-            console.log('RabbitMQ is connected or Sending error:', error);
+              console.log('RabbitMQ is connected or Sending error:', error);
+          } else {
+              console.log('The Request was received and Sent to RabbitMQ');
           }
-          console.log('The Request was received and Sent to RabbitMQ');
-        
-        });
+      });
       
        
         return;
@@ -90,7 +92,8 @@ export class Aggregator {
         console.log(microserviceController);
 
         const resultProduct = await microserviceController[actionMessage](requestData);
-        if (resultProduct === 'succes') {
+     
+
           const responseMessageText = JSON.stringify(requestData);
 
           rabbitmqServiceToUse?.sendMessage(responseMessageText, (error) => {
@@ -103,7 +106,7 @@ export class Aggregator {
           });
 
 
-        } 
+        
         
       }
       
@@ -140,6 +143,9 @@ export class Aggregator {
       return this.authApp;
 
     }
+   else if (microserviceName == 'return') {
+    return this.returnApp;
+  }
     return null;
   }
 

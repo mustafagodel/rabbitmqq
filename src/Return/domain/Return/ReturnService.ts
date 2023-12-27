@@ -6,8 +6,8 @@ import { Return, Returnitems } from './Return';
 export class ReturnService {
     constructor(@inject(ReturnRepository) private returnRepository: ReturnRepository) {}
 
-    async createReturn( returnReason: string, isDefective: boolean, returnDate: Date, items: Returnitems[]): Promise<Return | undefined> {
-        const newReturn = new Return(items,returnReason,isDefective,returnDate);
+    async createReturn( returnReason: string, isDefective: boolean, items: Returnitems[]): Promise<Return | undefined> {
+        const newReturn = new Return(items,returnReason,isDefective);
 
 
         const result = await this.returnRepository.add(newReturn);

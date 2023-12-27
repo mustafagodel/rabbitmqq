@@ -7,8 +7,8 @@ import { Returnitems } from '../domain/Return/Return';
 export class ReturnApplicationService {
     constructor(private returnService: ReturnService) {}
 
-    async createReturn( returnReason: string, isDefective: boolean, returnDate: Date, items: Returnitems[]): Promise<ApiResponse<any>> {
-        const createdReturn = await this.returnService.createReturn( returnReason, isDefective, returnDate, items);
+    async createReturn( returnReason: string, isDefective: boolean, items: Returnitems[]): Promise<ApiResponse<any>> {
+        const createdReturn = await this.returnService.createReturn( returnReason, isDefective, items);
 
         if (createdReturn) {
             return new ApiResponse(0, 'Return created successfully', createdReturn);

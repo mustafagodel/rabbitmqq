@@ -28,7 +28,9 @@ export class RequestResponseMap {
       'getname':orderRabbitMQProviderQueue,
       'checkAndDecreaseStock':productRabbitMQProviderQueue,
       'handleMessageAction':aggregatorRabbitMQProviderQueue,
-      'createReturn':returnRabbitMQProviderQueue
+      'createReturn':returnRabbitMQProviderQueue,
+      'processReturnAndSendResponse':returnRabbitMQProviderQueue
+     
     };
   }
 

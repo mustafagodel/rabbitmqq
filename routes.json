@@ -14,8 +14,13 @@
  
       },
       {
-        "action": "createReturn"
- 
+        "action": "createReturn",
+        "microservices": [
+          {
+            "name": "return",
+            "actionMessage": "processReturnAndSendResponse"
+          }
+        ]
       },
       {
         "action": "updateProduct"

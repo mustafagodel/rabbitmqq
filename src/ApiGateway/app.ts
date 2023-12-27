@@ -80,9 +80,13 @@ const sendResponseToClient = (
       return;
     } 
         console.log('The Request was received and Sent to RabbitMQ');
-     
+        rabbitmqServiceToUse.onMessageReceived((message) => {
+          const responseMessageText = JSON.parse(message);
+          res.status(200).json(responseMessageText);
+      });
       
-  });
+   
+  } );
   rabbitmqServiceToUse.onMessageReceived((message) => {
     const responseMessageText = JSON.parse(message);
     res.status(200).json(responseMessageText);
