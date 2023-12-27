@@ -88,16 +88,24 @@ export class RabbitMQProvider {
 
     public startConsumingMessages(channel: Channel) {
         if (!this.isConsuming) {
-            channel.consume(this.queueName, (message: Message | null) => {
-                if (message) {
-                    const content = message.content.toString();
-                    this.messageHandler(content);
-                    channel.ack(message);
-                }
-                
-            });
+         
     
-            this.isConsuming = true;
+
+            channel.consume(
+                this.queueName,
+                (msg) => {
+                  if (msg) {
+                    const message = msg.content.toString();
+                    console.log(`Received message: ${message}`);
+            
+                    channel.ack(msg);
+            
+              
+                  }
+                },
+                { noAck: false } 
+              );
+              this.isConsuming = true;
         }
     }
 
