@@ -10,7 +10,8 @@ export class RequestResponseMap {
     @inject('ProductRabbitMQProviderQueue') productRabbitMQProviderQueue: RabbitMQProvider,
     @inject('OrderRabbitMQProviderQueue') orderRabbitMQProviderQueue: RabbitMQProvider,
     @inject('AggregatorRabbitMQProviderQueue') aggregatorRabbitMQProviderQueue: RabbitMQProvider,
-    @inject('ReturnRabbitMQProviderQueue') returnRabbitMQProviderQueue: RabbitMQProvider
+    @inject('ReturnRabbitMQProviderQueue') returnRabbitMQProviderQueue: RabbitMQProvider,
+    @inject('ApiGateWayRabbitMQProviderQueue') apiGateWayRabbitMQProviderQueue: RabbitMQProvider,
   ) {
     this.requestMap = {
       'login': userRabbitMQProviderQueue,
@@ -29,8 +30,9 @@ export class RequestResponseMap {
       'checkAndDecreaseStock':productRabbitMQProviderQueue,
       'handleMessageAction':aggregatorRabbitMQProviderQueue,
       'createReturn':returnRabbitMQProviderQueue,
-      'processReturnAndSendResponse':returnRabbitMQProviderQueue
-     
+      'processReturnAndSendResponse':returnRabbitMQProviderQueue,
+      'response':aggregatorRabbitMQProviderQueue,
+      'apiGateWay':apiGateWayRabbitMQProviderQueue
     };
   }
 

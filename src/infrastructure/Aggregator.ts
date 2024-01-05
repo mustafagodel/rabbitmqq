@@ -7,7 +7,8 @@ import { inject, injectable } from 'inversify';
 import { OrderApp } from '../Order/app/app';
 import { AuthApp } from '../Auth/app/app';
 import { ReturnApp } from '../Return/app/app';
-
+import { channel } from 'diagnostics_channel';
+import amqplib,{ ConsumeMessage, connect }  from 'amqplib/callback_api';
 @injectable()
 export class Aggregator {
   public routes: any[] | undefined;
@@ -15,15 +16,14 @@ export class Aggregator {
  
   constructor(
     @inject('AggregatorRabbitMQProviderQueue') private aggregatorRabbitMQProviderQueue: RabbitMQProvider,
+    @inject('ApiGateWayRabbitMQProviderQueue') private apiGateWayRabbitMQProviderQueue: RabbitMQProvider,
     @inject(ProductApp) private productApp: ProductApp,
     @inject(OrderApp) private orderApp: OrderApp,
     @inject(AuthApp) private authApp: AuthApp,
-    
-
     @inject(ReturnApp) private returnApp: ReturnApp,  
- 
-    @inject(RequestResponseMap) private requestResponseMap: RequestResponseMap
+    @inject(RequestResponseMap) private requestResponseMap: RequestResponseMap,
 ) {
+ 
   this.returnApp = returnApp;
     this.productApp = productApp;
     this.orderApp = orderApp;
@@ -31,14 +31,33 @@ export class Aggregator {
     this.requestResponseMap = requestResponseMap;
     this.aggregatorRabbitMQProviderQueue = aggregatorRabbitMQProviderQueue;
     this.loadRoutes();
+
     this.aggregatorRabbitMQProviderQueue.onMessageReceived((message) => {
-      console.log('Received message in Aggregator:', message);
-      this.handleMessageAction(message);
+
+      const requestData = JSON.parse(message);
+      
+      if (requestData.action) {
+          this.handleMessageAction(message);
+        
+ 
+      } else{
+
+        const responseMessageText = JSON.stringify(requestData);
+       this.apiGateWayRabbitMQProviderQueue?.sendMessage(responseMessageText, (error) => {
+          if (error) {
+              console.log('RabbitMQ is connected or Sending error:', error);
+          } 
+              console.log('The Request was received and Sent to RabbitMQ');
+       
+      });
+    }
+  
+
   });
 
+ 
 }
-  public async handleMessageAction(message: string,) {
-
+  public async handleMessageAction(message: string) {
 
     const requestData = 
     JSON.parse(message);
@@ -46,7 +65,7 @@ export class Aggregator {
     const action = requestData.action;
     const rabbitmqServiceToUse = this.requestResponseMap.getRequestService(requestData.action);
 
-
+   
 
     if (!this.routes) {
       console.error('Routes are not loaded');
@@ -69,15 +88,17 @@ export class Aggregator {
         rabbitmqServiceToUse?.sendMessage(responseMessageText, (error) => {
           if (error) {
               console.log('RabbitMQ is connected or Sending error:', error);
-          } else {
+          } 
               console.log('The Request was received and Sent to RabbitMQ');
-          }
+       
       });
-      
+    
+    
        
         return;
    
       }
+   
 
       for (const microservice of route.microservices) {
         const { name, actionMessage } = microservice;
@@ -110,11 +131,18 @@ export class Aggregator {
         
       }
       
-      
-    }
     
-  }
+  
+    }
 
+
+
+  }
+  
+
+
+
+ 
   private loadRoutes() {
     try {
 
@@ -148,7 +176,6 @@ export class Aggregator {
   }
     return null;
   }
-
 
 }
 

@@ -64,7 +64,7 @@ container.bind<OrderApplicationService>(OrderApplicationService).to(OrderApplica
 
 container.bind<OrderApp>(OrderApp).to(OrderApp).inRequestScope();
 
-container.bind<RequestResponseMap>(RequestResponseMap).to(RequestResponseMap).inRequestScope();
+container.bind<RequestResponseMap>(RequestResponseMap).to(RequestResponseMap).inSingletonScope();
 
 
 container.bind<Return>(Return).to(Return).inRequestScope();
@@ -96,7 +96,9 @@ container.bind<RabbitMQProvider>('AggregatorRabbitMQProviderQueue').toDynamicVal
 container.bind<RabbitMQProvider>('ReturnRabbitMQProviderQueue').toDynamicValue(() => {
   return new RabbitMQProvider('amqp://localhost', 'ReturnQueue');
 }).inRequestScope();
-
+container.bind<RabbitMQProvider>('ApiGateWayRabbitMQProviderQueue').toDynamicValue(() => {
+  return new RabbitMQProvider('amqp://localhost', 'ApiGate');
+}).inRequestScope();
 
 
 

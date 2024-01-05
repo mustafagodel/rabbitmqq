@@ -43,15 +43,14 @@ export class RabbitMQProvider {
                 this.channel = channel;
                 channel.assertQueue(this.queueName, { durable: false });
                 
-                // Sadece bir mesajın işlenmesini sağla
-                channel.prefetch(1);
+       
             
                 console.log(`Listening for messages in ${this.queueName}...`);
                 this.startConsumingMessages(channel);
             
                 this.isConnectionCreated = true;
             });
-            // ..
+ 
         });
     }
 
@@ -86,23 +85,19 @@ export class RabbitMQProvider {
             });
         }
     }
-    public startConsumingMessages(channel: Channel) {
-        if (!this.isConsuming) {
-            channel.consume(this.queueName, (message: Message | null) => {
-                if (message) {
-                    const content = message.content.toString();
-                    console.log(`Received message: ${content}`);
-    
-                    this.messageHandler(content);
-                    
-                    
-                    channel.ack(message);
-                    console.log('Acknowledgment sent.');
-                }
-            });
-    
-            this.isConsuming = true;
-        }
+    private startConsumingMessages(channel: Channel) {
+        channel.consume(this.queueName, (message: Message | null) => {
+            if (message) {
+                const content = message.content.toString();
+                console.log(`Received message: ${content}`);
+
+                this.messageHandler(content);
+
+                channel.ack(message);
+                console.log('Acknowledgment sent.');
+                this.startConsumingMessages(channel);
+            }
+        });
     }
     
 

@@ -10,6 +10,7 @@ import * as amqp from 'amqplib/callback_api';
 import  { SecurityExtension } from '../../infrastructure/SecurityExtension';
 
 import { RabbitMQProvider } from '../../infrastructure/RabbitMQProvider';
+import { RequestResponseMap } from '../../infrastructure/RequestResponseMap';
 interface ApiResponse<T> {
     response: T;
     token: string;
@@ -26,9 +27,13 @@ export class AuthApp{
         @inject('UserRabbitMQProviderQueue') private UserrabbitMQProvider: RabbitMQProvider,
         @inject(UserApplicationService) userAppService: UserApplicationService ,
         @inject('AggregatorRabbitMQProviderQueue') private aggregatorRabbitMQProviderQueue: RabbitMQProvider,
-    ) {
-        this.userAppService = userAppService; 
+        @inject(RequestResponseMap) private requestResponseMap: RequestResponseMap
 
+
+    ) {
+        this.requestResponseMap=requestResponseMap;
+        this.aggregatorRabbitMQProviderQueue=aggregatorRabbitMQProviderQueue;
+        this.userAppService = userAppService; 
         this.UserrabbitMQProvider.onMessageReceived((message: string) => {
             this.handleMessage(message);
         });
@@ -37,8 +42,9 @@ export class AuthApp{
 
 
     public async handleMessage(message: string) {
-        const messageData = JSON.parse(message);
 
+        const messageData = JSON.parse(message);
+    
         const func = this.functions[messageData.action];
 
         if(!func) {

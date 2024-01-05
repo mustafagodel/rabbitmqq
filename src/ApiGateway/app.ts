@@ -31,12 +31,11 @@ app.use(AuthMiddleware);
 
 
 container.get<Aggregator>(Aggregator);
-container.get<AuthApp>(AuthApp);
-container.get<ProductApp>(ProductApp);
-container.get<OrderApp>(OrderApp);
-container.get<ReturnApp>(ReturnApp);
+
 const requestResponseMap = container.get<RequestResponseMap>(RequestResponseMap);
 app.post('/api', (req, res) => {
+
+
   const requestData = req.body;
   const rabbitmqServiceToUse = requestResponseMap.getRequestService('handleMessageAction');
 
@@ -72,6 +71,9 @@ const sendResponseToClient = (
   rabbitmqServiceToUse: RabbitMQProvider,
   requestData: { action: string }
 ) => {
+
+  const rabbitmqServiceToUselast = requestResponseMap.getRequestService('apiGateWay');
+ 
   const responseMessageText = JSON.stringify(requestData);
   rabbitmqServiceToUse.sendMessage(responseMessageText, (error) => {
     if (error) {
@@ -80,13 +82,11 @@ const sendResponseToClient = (
       return;
     } 
         console.log('The Request was received and Sent to RabbitMQ');
-        rabbitmqServiceToUse.onMessageReceived((message) => {
-          const responseMessageText = JSON.parse(message);
-          res.status(200).json(responseMessageText);
-      });
-
   });
-
+  rabbitmqServiceToUselast?.onMessageReceived((message) => {
+    const responseMessageText = JSON.parse(message);
+    res.status(200).json(responseMessageText);
+});
 
 
 
