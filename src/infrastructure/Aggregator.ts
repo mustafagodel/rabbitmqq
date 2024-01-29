@@ -113,8 +113,8 @@ export class Aggregator {
         console.log(microserviceController);
 
         const resultProduct = await microserviceController[actionMessage](requestData);
-     
-
+     if(resultProduct=='succes'){
+      
           const responseMessageText = JSON.stringify(requestData);
 
           rabbitmqServiceToUse?.sendMessage(responseMessageText, (error) => {
@@ -126,7 +126,20 @@ export class Aggregator {
 
           });
 
+        }else{
+          const errorMessage = {
+            error: resultProduct, 
+        };
+        const responseMessageText = JSON.stringify(errorMessage);
+        this.apiGateWayRabbitMQProviderQueue?.sendMessage(responseMessageText, (error) => {
+           if (error) {
+               console.log('RabbitMQ is connected or Sending error:', error);
+           } 
+               console.log('The Request was received and Sent to RabbitMQ');
+        
+       });
 
+        }
         
         
       }

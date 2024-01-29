@@ -17,8 +17,8 @@
         "action": "createReturn",
         "microservices": [
           {
-            "name": "return",
-            "actionMessage": "processReturnAndSendResponse"
+            "name": "product",
+            "actionMessage": "checkAndincreaseStock"
           }
         ]
       },

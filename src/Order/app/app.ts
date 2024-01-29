@@ -39,6 +39,7 @@ export class OrderApp{
 
     public functions = {
         async createOrder(orderAppService: OrderApplicationService, messageData: any, rabbitmqService: RabbitMQProvider) {
+
             const response = await orderAppService.createOrder(
                 messageData.orderId,
                 messageData.items,

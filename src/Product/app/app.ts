@@ -205,6 +205,34 @@ export class ProductApp {
                 return 'insufficient_stock'; 
             }
         }
+        async checkAndincreaseStock(messageData: any) {
+  
+         
+            const itemsArray: string[] = JSON.parse(messageData.returnItems.replace(/'/g, '"'));
+            const productName: string = itemsArray[0];
+            const stockAsString: string = itemsArray[1];
+            const product = await this.productAppService.getProductByName(productName);
+        
+       
+            console.log('Retrieved product:', product);
+        
+            if (!product) {
+                return 'error';
+            }
+            const stockAsNumber = parseFloat(stockAsString);
+       
+            
+            if (stockAsNumber > 0) {
+                product.data.stock += stockAsNumber;
+                await this.productAppService.updateProduct(product.data.id,product.data.type,productName,product.data.price,product.data.stock);
+              
+                return "succes";
+        
+              
+            } else {
+                return 'insufficient_stock'; 
+            }
+        }
     
     async getNameProduct(productAppService: ProductApplicationService, messageData: any, rabbitmqService: RabbitMQProvider) {
         const createResult = await productAppService.getProductByName(

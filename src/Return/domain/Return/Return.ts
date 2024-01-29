@@ -22,7 +22,23 @@ export class Return {
     setReturnDate(returnDate: Date): void {
         this.returnDate = returnDate;
     }
+    getFormattedReturnDate(): string {
+        if (this.returnDate) {
+            const options: Intl.DateTimeFormatOptions = {
+                year: 'numeric',
+                month: 'numeric',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: 'numeric',
+                second: 'numeric',
+                timeZoneName: 'short',
+            };
+            return this.returnDate.toLocaleString('tr-TR', options);
+        }
+        return '';
+    }
 }
+
 export class Returnitems {
     constructor(public productname: string, public quantity: number) {}
 }

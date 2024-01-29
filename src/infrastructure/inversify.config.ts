@@ -28,7 +28,7 @@ import { Aggregator } from '../infrastructure/Aggregator';
 
 
 const configureContainer = (container: Container) => {
-container.bind<MongoDBConnector>(MongoDBConnector).to(MongoDBConnector).inRequestScope();
+container.bind<MongoDBConnector>(MongoDBConnector).to(MongoDBConnector).inSingletonScope();
 
 container.bind<UserRepository>(UserRepository).to(UserRepository).inRequestScope();
 
@@ -50,7 +50,7 @@ container.bind<ProductRepository>(ProductRepository).to(ProductRepository).inReq
 
 container.bind<ProductService>(ProductService).to(ProductService).inRequestScope();
 
-container.bind<Aggregator>(Aggregator).to(Aggregator).inRequestScope();
+container.bind<Aggregator>(Aggregator).to(Aggregator).inSingletonScope();
 
 
 
