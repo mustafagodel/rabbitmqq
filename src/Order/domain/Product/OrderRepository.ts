@@ -76,7 +76,7 @@ export class OrderRepository {
                 return undefined;
             }
             const order = new Order(orderMassage.orderId, orderMassage.items, orderMassage.price);
-            order.id = orderMassage._id.toString();
+            order.id = orderMassage._id;
 
             return order;
         } catch (error) {
@@ -94,7 +94,7 @@ export class OrderRepository {
             const orderMassage = await this.collection.find({}).toArray();
             const order: Order[] = orderMassage.map((orderMassage) => {
                 const order = new Order(orderMassage.orderId, orderMassage.items, orderMassage.price);
-                order.id = orderMassage._id.toString();
+                order.id = orderMassage._id;
                 return order;
             });
 

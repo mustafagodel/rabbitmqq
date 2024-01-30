@@ -38,10 +38,8 @@ export class ReturnApp {
     }
     public functions = {
         async createReturn(returnAppService: ReturnApplicationService, messageData: any, rabbitmqService: RabbitMQProvider) {
-       
                 const createResult = await returnAppService.createReturn(
                     messageData.returnReason,
-                    messageData.isDefective,
                     messageData.returnItems
                 );
 
@@ -58,11 +56,14 @@ export class ReturnApp {
                         console.log('The response message has been sent to RabbitMQ.');
                     }
                 });
-           
+            
         },
+            
+        }
+        
     };
 
-}
+
 
   
 

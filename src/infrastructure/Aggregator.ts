@@ -32,7 +32,7 @@ export class Aggregator {
     this.aggregatorRabbitMQProviderQueue = aggregatorRabbitMQProviderQueue;
     this.loadRoutes();
 
-    this.aggregatorRabbitMQProviderQueue.onMessageReceived((message) => {
+     this.aggregatorRabbitMQProviderQueue.onMessageReceived((message) => {
 
       const requestData = JSON.parse(message);
       
@@ -138,13 +138,8 @@ export class Aggregator {
                console.log('The Request was received and Sent to RabbitMQ');
         
        });
-
         }
-        
-        
       }
-      
-    
   
     }
 

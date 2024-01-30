@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { NextFunction } from 'express';
 import 'reflect-metadata';
 import bodyParser, { json } from 'body-parser';
 import { Container } from 'inversify';
@@ -26,16 +26,12 @@ configureContainer(container);
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(ExecptionMiddleware);
 app.use(AuthMiddleware);
-
-
+app.use(ExecptionMiddleware.startSaga);
 container.get<Aggregator>(Aggregator);
-
 const requestResponseMap = container.get<RequestResponseMap>(RequestResponseMap);
+
 app.post('/api', (req, res) => {
-
-
   const requestData = req.body;
   const rabbitmqServiceToUse = requestResponseMap.getRequestService('handleMessageAction');
 
@@ -88,14 +84,7 @@ const sendResponseToClient = (
     res.status(200).json(responseMessageText);
 });
 
-
-
-
 };
-
-
-
- 
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);

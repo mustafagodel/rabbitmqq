@@ -1,8 +1,9 @@
 import { injectable } from 'inversify';
+import { ObjectId } from 'mongodb';
 
 @injectable()
 export class Order {
-    id: string | undefined;
+    id: ObjectId | undefined;
 
     constructor(
         public orderId: string, 
@@ -12,5 +13,5 @@ export class Order {
 }
 
 export class OrderItem {
-    constructor(public productname: string, public quantity: number) {}
+    constructor(public productname: string, public quantity: number,public ıd:ObjectId) {}
 }

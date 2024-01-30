@@ -70,7 +70,7 @@ export class ProductRepository {
             }
 
             const product: Product = new Product(productDoc.type,productDoc.name, productDoc.price, productDoc.stock);
-            product.id = productDoc._id.toString();
+            product.id = productDoc._id;
 
             return product;
         } catch (error) {
@@ -88,7 +88,7 @@ export class ProductRepository {
             const productsDoc = await this.collection.find({}).toArray();
             const products: Product[] = productsDoc.map((productDoc) => {
                 const product: Product = new Product(productDoc.type,productDoc.name, productDoc.price, productDoc.stock);
-                product.id = productDoc._id.toString();
+                product.id = productDoc._id;
                 return product;
             });
 
@@ -111,7 +111,7 @@ export class ProductRepository {
             }
     
             const product: Product = new Product(productDoc.type, productDoc.name, productDoc.price, productDoc.stock);
-            product.id = productDoc._id.toString();
+            product.id = productDoc._id;
     
             return product;
         } catch (error) {

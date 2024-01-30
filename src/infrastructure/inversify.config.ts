@@ -25,6 +25,7 @@ import { OrderService } from '../Order/domain/Product/OrderService';
 import { OrderApplicationService } from '../Order/appservices/OrderApplicationService';  
 import { OrderApp } from '../Order/app/app';  
 import { Aggregator } from '../infrastructure/Aggregator';  
+import { Stock } from './StockService';  
 
 
 const configureContainer = (container: Container) => {
@@ -37,6 +38,7 @@ container.bind<UserApplicationService>(UserApplicationService).to(UserApplicatio
 container.bind<UserService>(UserService).to(UserService).inRequestScope();
 
 container.bind<AuthApp>(AuthApp).to(AuthApp).inRequestScope();
+container.bind<Stock>(Stock).to(Stock).inSingletonScope();
 
 container.bind<PasswordService>(PasswordService).to(PasswordService).inRequestScope();
 

@@ -7,6 +7,7 @@ import { ProductApplicationService } from '../appservices/ProductApplicationServ
 import { RabbitMQProvider } from '../../infrastructure/RabbitMQProvider';
 import 'reflect-metadata';
 import { OrderItem } from '../../Order/domain/Product/Order';
+import { Stock } from '../../infrastructure/StockService';
 @injectable()
 export class ProductApp {
     private readonly router: Router;
@@ -18,11 +19,12 @@ export class ProductApp {
         @inject('ProductRabbitMQProviderQueue') private productrabbitMQProvider: RabbitMQProvider,
         @inject(ProductApplicationService) private productApplicationService: ProductApplicationService,
         @inject('AggregatorRabbitMQProviderQueue') private aggregatorRabbitMQProviderQueue: RabbitMQProvider,
+        @inject(Stock) private stock: Stock
     ) {
         this.router = express.Router();
         this.productAppService = productApplicationService;
         this.productrabbitMQProvider = productrabbitMQProvider;
-
+        this.stock=stock;
         this.productrabbitMQProvider.onMessageReceived((message: string) => {
             this.handleMessage(message);
         });
@@ -39,7 +41,7 @@ export class ProductApp {
          
         }
 
-        return await func(this.productApplicationService, messageData, this.aggregatorRabbitMQProviderQueue);
+        return await func(this.productApplicationService, messageData, this.aggregatorRabbitMQProviderQueue,this.stock);
     }
 
 
@@ -48,15 +50,18 @@ export class ProductApp {
 
        
     public  functions = {
-        async createProduct(productAppService: ProductApplicationService, messageData: any, rabbitmqService: RabbitMQProvider) {
-
+        
+        async createProduct(productAppService: ProductApplicationService, messageData: any, rabbitmqService: RabbitMQProvider,stock:Stock) {
+            let productId: string | undefined;
             const existingProduct = await productAppService.getProductByName(messageData.name);
             
            
             if (existingProduct.message=="Product succes") {
-                const existingStock = parseFloat(existingProduct.data.stock);
-                const additionalStock = parseFloat(messageData.stock);
-                existingProduct.data.stock = (existingStock + additionalStock).toString();
+                const existingStock = Number(existingProduct.data.stock);
+                const additionalStock = Number(messageData.stock);
+                
+            
+                existingProduct.data.stock = existingStock + additionalStock;
                 const updateResult =await productAppService.updateProduct(existingProduct.data.id,existingProduct.data.type,existingProduct.data.name,existingProduct.data.price,existingProduct.data.stock);
         
                 const responseMessage = {
@@ -74,6 +79,8 @@ export class ProductApp {
                     }
                     
                 });
+                stock.Stock(existingProduct.data.id, additionalStock, 'increase stok');
+
             } else {
                 const createResult = await productAppService.createProduct(
                     messageData.type,
@@ -95,9 +102,12 @@ export class ProductApp {
                         console.log('The response message has been sent to RabbitMQ.');
                     }
                 });
+                stock.Stock(createResult.data._id,  messageData.stock, 'increase stok');
             }
+            
+           
         },
-        async updateProduct(productAppService: ProductApplicationService, messageData: any, rabbitmqService: RabbitMQProvider) {
+        async updateProduct(productAppService: ProductApplicationService, messageData: any, rabbitmqService: RabbitMQProvider,stock:Stock) {
             const createResult = await productAppService.updateProduct(
                 messageData.id,
                 messageData.type,
@@ -120,7 +130,8 @@ export class ProductApp {
                      console.log('The response message has been sent to RabbitMQ.');
                 }
             });
-        }, async deleteProduct(productAppService: ProductApplicationService, messageData: any, rabbitmqService: RabbitMQProvider) {
+            stock.Stock(createResult.data._id,  messageData.stock, 'update stok');
+        }, async deleteProduct(productAppService: ProductApplicationService, messageData: any, rabbitmqService: RabbitMQProvider,stock:Stock) {
             const createResult = await productAppService.deleteProduct(
                 messageData.id,
             );
@@ -139,6 +150,7 @@ export class ProductApp {
                     console.log('The response message has been sent to RabbitMQ.');
                 }
             });
+            stock.Stock(createResult.data._id,  messageData.stock, 'decrease stok');
         }, async getProduct(productAppService: ProductApplicationService, messageData: any, rabbitmqService: RabbitMQProvider) {
             const createResult = await productAppService.getProductById(
                 messageData.id,
@@ -180,24 +192,26 @@ export class ProductApp {
       async checkAndDecreaseStock(messageData: any) {
   
          
-            const itemsArray: string[] = JSON.parse(messageData.items.replace(/'/g, '"'));
-            const productName: string = itemsArray[0];
-            const stockAsString: string = itemsArray[1];
-            const product = await this.productAppService.getProductByName(productName);
+const itemsArray: string[] = JSON.parse(JSON.stringify(messageData.items));
+const productName: string = itemsArray[0];
+const stockAsString: string = itemsArray[1];
+
+const product = await this.productAppService.getProductByName(productName);
+
         
        
             console.log('Retrieved product:', product);
         
-            if (!product) {
+            if (product.message=='Product not found') {
                 return 'error';
             }
-            const stockAsNumber = parseFloat(stockAsString);
+            const stockAsNumber = parseInt(stockAsString);
        
             
             if (product.data.stock >= stockAsNumber&&stockAsNumber*product.data.price==messageData.price) {
                 product.data.stock -= stockAsNumber;
-                await this.productAppService.updateProduct(product.data.id,product.data.type,productName,product.data.price,product.data.stock);
-              
+                const updateProduct = this.productAppService.updateProduct(product.data.id,product.data.type,productName,product.data.price,product.data.stock);
+                this.stock.Stock(product.data.id, stockAsNumber, 'decrease stok');
                 return "succes";
         
               
@@ -219,13 +233,13 @@ export class ProductApp {
             if (!product) {
                 return 'error';
             }
-            const stockAsNumber = parseFloat(stockAsString);
+            const stockAsNumber = parseInt(stockAsString);
        
             
             if (stockAsNumber > 0) {
                 product.data.stock += stockAsNumber;
                 await this.productAppService.updateProduct(product.data.id,product.data.type,productName,product.data.price,product.data.stock);
-              
+                this.stock.Stock(product.data.id, stockAsNumber, 'increase stok');
                 return "succes";
         
               

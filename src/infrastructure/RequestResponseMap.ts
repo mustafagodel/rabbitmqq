@@ -29,10 +29,10 @@ export class RequestResponseMap {
       'getname':orderRabbitMQProviderQueue,
       'checkAndDecreaseStock':productRabbitMQProviderQueue,
       'handleMessageAction':aggregatorRabbitMQProviderQueue,
-      'createReturn':returnRabbitMQProviderQueue,
-      'processReturnAndSendResponse':returnRabbitMQProviderQueue,
       'response':aggregatorRabbitMQProviderQueue,
-      'apiGateWay':apiGateWayRabbitMQProviderQueue
+      'apiGateWay':apiGateWayRabbitMQProviderQueue,
+      'createReturn':returnRabbitMQProviderQueue,
+      'checkReturn,':returnRabbitMQProviderQueue
     };
   }
 
@@ -42,7 +42,7 @@ export class RequestResponseMap {
   }
 
   requiresCustomerRole(action: string, userRole: string): boolean {
-    const CustomerRequiredActions = ['createOrder', 'updateOrder', 'deleteOrder', 'handleMessageAction','getOrder','getAllOrders','createReturn'];
+    const CustomerRequiredActions = ['createOrder', 'updateOrder', 'deleteOrder', 'handleMessageAction','getOrder','getAllOrders','createReturn','checkReturn'];
     return CustomerRequiredActions.includes(action) && userRole !== 'customer';
   }
   getRequestService(action: string): RabbitMQProvider | undefined {
