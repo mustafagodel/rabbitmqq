@@ -14,8 +14,6 @@ class ExceptionMiddleware {
         let session: ClientSession | null = null;
 
         try {
-         
-        
             await connector.connect();
             session = await connector.startTransaction();
             req.dbSession = session;
@@ -27,15 +25,10 @@ class ExceptionMiddleware {
                 await connector.commitTransaction(session);
             }
 
-
             console.log('SagaMiddleware: İşlem tamamlandı.');
 
-    
             next();
-
-            
         } catch (error: any) {
-   
             if (session) {
                 await connector.abortTransaction(session);
             }
@@ -43,7 +36,7 @@ class ExceptionMiddleware {
             process.exit(1);
         }
     }
-    
 }
 
 export default ExceptionMiddleware;
+

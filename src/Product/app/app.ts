@@ -210,7 +210,7 @@ const product = await this.productAppService.getProductByName(productName);
             
             if (product.data.stock >= stockAsNumber&&stockAsNumber*product.data.price==messageData.price) {
                 product.data.stock -= stockAsNumber;
-                const updateProduct = this.productAppService.updateProduct(product.data.id,product.data.type,productName,product.data.price,product.data.stock);
+                this.productAppService.updateProduct(product.data.id,product.data.type,productName,product.data.price,product.data.stock);
                 this.stock.Stock(product.data.id, stockAsNumber, 'decrease stok');
                 return "succes";
         
