@@ -26,6 +26,8 @@ import { OrderApplicationService } from '../Order/appservices/OrderApplicationSe
 import { OrderApp } from '../Order/app/app';  
 import { Aggregator } from '../infrastructure/Aggregator';  
 import { Stock } from './StockService';  
+import  ExceptionMiddleware  from '../middleware/ExecptionMiddleware';  
+
 
 
 const configureContainer = (container: Container) => {
@@ -38,7 +40,10 @@ container.bind<UserApplicationService>(UserApplicationService).to(UserApplicatio
 container.bind<UserService>(UserService).to(UserService).inRequestScope();
 
 container.bind<AuthApp>(AuthApp).to(AuthApp).inRequestScope();
+
 container.bind<Stock>(Stock).to(Stock).inSingletonScope();
+
+container.bind<ExceptionMiddleware>(ExceptionMiddleware).to(ExceptionMiddleware).inSingletonScope();
 
 container.bind<PasswordService>(PasswordService).to(PasswordService).inRequestScope();
 

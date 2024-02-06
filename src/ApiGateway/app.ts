@@ -1,15 +1,11 @@
-import express, { NextFunction } from 'express';
+import express, { NextFunction, Request } from 'express';
 import 'reflect-metadata';
 import bodyParser, { json } from 'body-parser';
 import { Container } from 'inversify';
 import configureContainer from '../infrastructure/inversify.config';
-import { AuthApp } from '../Auth/app/app.js';
-import { OrderApp } from '../Order/app/app';
 import ExceptionMiddleware from '../middleware/ExecptionMiddleware';
 import  AuthMiddleware  from '../middleware/AuthMiddleware';
 import { RabbitMQProvider } from '../infrastructure/RabbitMQProvider'; 
-import { ProductApp } from '../Product/app/app';
-import { ReturnApp } from '../Return/app/app';
 import { RequestResponseMap } from '../infrastructure/RequestResponseMap';  
 
 require('dotenv').config();
@@ -22,15 +18,11 @@ const port = process.env.PORT || 3000;
 const container = new Container();
 configureContainer(container);
 
-
-
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(AuthMiddleware);
-app.use(ExceptionMiddleware.startSaga);
 container.get<Aggregator>(Aggregator);
 const requestResponseMap = container.get<RequestResponseMap>(RequestResponseMap);
-
 app.post('/api', (req, res) => {
   const requestData = req.body;
   const rabbitmqServiceToUse = requestResponseMap.getRequestService('handleMessageAction');

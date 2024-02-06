@@ -40,5 +40,14 @@ export class MongoDBConnector {
         await session.abortTransaction();
         session.endSession();
     }
+    async rollbackTransaction(session: ClientSession): Promise<void> {
+        try {
+            if (session.inTransaction()) {
+                await session.abortTransaction();
+            }
+        } finally {
+            session.endSession();
+        }
+    }
 }
 

@@ -12,7 +12,7 @@ declare global {
     }
 }
 
-const AuthMiddleware = (req: Request, res: Response, next: NextFunction) => {
+const AuthMiddleware = (req: Request, res: Response, next: NextFunction): void | Response<any> => {
     const secretKey = process.env.SECRET_KEY;
   
     try {

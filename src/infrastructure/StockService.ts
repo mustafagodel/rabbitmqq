@@ -11,7 +11,7 @@ export class Stock {
         this.collection = databaseConnector.getDb()?.collection('stock');
     }
 
-    async Stock(productId: ObjectId, Stok: number, operation: 'increase stok' | 'decrease stok'|'update stok'): Promise<{ success: boolean }> {
+    async Stock(productId: ObjectId, Stok: number, operation: 'increase stok' | 'decrease stok'|'update stok'|'rollback stok'): Promise<{ success: boolean }> {
 
             const timestamp = new Date();
             const result = await this.collection!.insertOne({ productId, Stok, operation,timestamp });

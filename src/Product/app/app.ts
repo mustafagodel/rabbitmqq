@@ -19,7 +19,8 @@ export class ProductApp {
         @inject('ProductRabbitMQProviderQueue') private productrabbitMQProvider: RabbitMQProvider,
         @inject(ProductApplicationService) private productApplicationService: ProductApplicationService,
         @inject('AggregatorRabbitMQProviderQueue') private aggregatorRabbitMQProviderQueue: RabbitMQProvider,
-        @inject(Stock) private stock: Stock
+        @inject(Stock) private stock: Stock,
+        
     ) {
         this.router = express.Router();
         this.productAppService = productApplicationService;
@@ -31,17 +32,20 @@ export class ProductApp {
     }
     
     public async handleMessage(message: string) {
-        const messageData = JSON.parse(message);
-
-        const func = this.functions[messageData.action];
-
-        if(!func) {
-
-            throw new Error("undefined method");            
-         
+        try {
+            const messageData = JSON.parse(message);
+    
+            const func = this.functions[messageData.action];
+    
+            if (!func) {
+                throw new Error("undefined method");
+            }
+    
+            await func(this.productApplicationService, messageData, this.aggregatorRabbitMQProviderQueue, this.stock);
+        } catch (error) {
+            console.error('Error handling message:', error);
+            // You can implement additional error handling or compensation logic here.
         }
-
-        return await func(this.productApplicationService, messageData, this.aggregatorRabbitMQProviderQueue,this.stock);
     }
 
 
@@ -189,17 +193,14 @@ export class ProductApp {
         }
       };
      
-      async checkAndDecreaseStock(messageData: any) {
+      async checkAndDecreaseStock(messageData: any,aggregatorRabbitMQProviderQueue: RabbitMQProvider) {
   
          
 const itemsArray: string[] = JSON.parse(JSON.stringify(messageData.items));
 const productName: string = itemsArray[0];
 const stockAsString: string = itemsArray[1];
-
 const product = await this.productAppService.getProductByName(productName);
 
-        
-       
             console.log('Retrieved product:', product);
         
             if (product.message=='Product not found') {
@@ -211,13 +212,18 @@ const product = await this.productAppService.getProductByName(productName);
             if (product.data.stock >= stockAsNumber&&stockAsNumber*product.data.price==messageData.price) {
                 product.data.stock -= stockAsNumber;
                 this.productAppService.updateProduct(product.data.id,product.data.type,productName,product.data.price,product.data.stock);
-                this.stock.Stock(product.data.id, stockAsNumber, 'decrease stok');
+                const stok = this.stock.Stock(product.data.id, stockAsNumber, 'decrease stok');
+                if((await stok).success){
+                    
                 return "succes";
-        
+                }else{
+                    throw new Error('Product creation failed');
+                }
               
             } else {
                 return 'insufficient_stock'; 
             }
+            
         }
         async checkAndincreaseStock(messageData: any) {
   
@@ -241,8 +247,6 @@ const product = await this.productAppService.getProductByName(productName);
                 await this.productAppService.updateProduct(product.data.id,product.data.type,productName,product.data.price,product.data.stock);
                 this.stock.Stock(product.data.id, stockAsNumber, 'increase stok');
                 return "succes";
-        
-              
             } else {
                 return 'insufficient_stock'; 
             }
@@ -267,4 +271,21 @@ const product = await this.productAppService.getProductByName(productName);
             }
         });
     }
+    async rollbackStock(messageData: any) {
+        const itemsArray: string[] = JSON.parse(JSON.stringify(messageData.items));
+                  const productName: string = itemsArray[0];
+                  const stockAsString: string = itemsArray[1];
+                  const stockAsNumber = parseInt(stockAsString);
+                  const product = await this.productAppService.getProductByName(productName);
+
+                  let stockDifference=0;
+                  if(messageData.action=='createOrder'){
+                   stockDifference = product.data.stock + stockAsNumber;
+                  }else if(messageData.action=='createReturn'){
+                    stockDifference=product.data.stock - stockAsNumber;
+                  }
+
+                    this.productAppService.updateProduct(product.data.id,product.data.type,productName,product.data.price,stockDifference);
+                    await this.stock.Stock(product.data.id, stockAsNumber, 'rollback stok');
+      }
 }

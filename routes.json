@@ -5,7 +5,8 @@
         "microservices": [
           {
             "name": "product",
-            "actionMessage": "checkAndDecreaseStock"
+            "actionMessage": "checkAndDecreaseStock",
+            "sagacontrol" : "true"
           }
         ]
       }, 
