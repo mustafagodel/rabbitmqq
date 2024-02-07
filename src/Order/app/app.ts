@@ -30,7 +30,18 @@ export class OrderApp{
         const func = this.functions[messageData.action];
 
         if (!func) {
-            throw new Error('undefined method');
+            const responseMessage = {
+                result: 'undefined method',
+            };
+            const responseMessageText = JSON.stringify(responseMessage);
+           this.aggregatorRabbitMQProviderQueue.sendMessage(responseMessageText, (error: any) => {
+            if (error) {
+                console.error('RabbitMQ connection or sending error:', error);
+            } 
+                console.log('Response message has been sent to RabbitMQ.');
+          
+        });
+        return;
         }
      
         return await func(this.orderAppService, messageData, this.aggregatorRabbitMQProviderQueue);
@@ -38,7 +49,7 @@ export class OrderApp{
 
 
     public functions = {
-        async createOrder(orderAppService: OrderApplicationService, messageData: any, rabbitmqService: RabbitMQProvider) {
+        async createOrderr(orderAppService: OrderApplicationService, messageData: any, rabbitmqService: RabbitMQProvider) {
 
             const response = await orderAppService.createOrder(
                 messageData.orderId,

@@ -38,7 +38,7 @@ export class ProductApp {
             const func = this.functions[messageData.action];
     
             if (!func) {
-                throw new Error("undefined method");
+           
             }
     
             await func(this.productApplicationService, messageData, this.aggregatorRabbitMQProviderQueue, this.stock);

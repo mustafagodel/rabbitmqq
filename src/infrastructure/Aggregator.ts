@@ -140,6 +140,14 @@ private async handleSaga(route: any, requestData: any,rabbitmqServiceToUse: Rabb
                 console.log('The Request was received and Sent to RabbitMQ');
                
             });
+   
+              const resultOrder = await this.waitForRabbitMQMessage();
+              if(resultOrder.result=='undefined method'){
+                connector.rollbackTransaction(session!);
+                microserviceController['rollback'](requestData);
+              }
+           
+       
         } else {
             const errorMessage = { error: resultProduct };
             const responseMessageText = JSON.stringify(errorMessage);
