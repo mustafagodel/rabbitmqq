@@ -44,7 +44,7 @@ export class ProductApp {
             await func(this.productApplicationService, messageData, this.aggregatorRabbitMQProviderQueue, this.stock);
         } catch (error) {
             console.error('Error handling message:', error);
-            // You can implement additional error handling or compensation logic here.
+      
         }
     }
 
@@ -193,9 +193,7 @@ export class ProductApp {
         }
       };
      
-      async checkAndDecreaseStock(messageData: any,aggregatorRabbitMQProviderQueue: RabbitMQProvider) {
-  
-         
+      async checkAndDecreaseStock(messageData: any) {  
 const itemsArray: string[] = JSON.parse(JSON.stringify(messageData.items));
 const productName: string = itemsArray[0];
 const stockAsString: string = itemsArray[1];
@@ -214,14 +212,46 @@ const product = await this.productAppService.getProductByName(productName);
                 this.productAppService.updateProduct(product.data.id,product.data.type,productName,product.data.price,product.data.stock);
                 const stok = this.stock.Stock(product.data.id, stockAsNumber, 'decrease stok');
                 if((await stok).success){
-                    
-                return "succes";
+                    const responseMessage = {
+                       result:"succes"
+                    };
+                    const responseMessageText = JSON.stringify(responseMessage);
+
+                    this.aggregatorRabbitMQProviderQueue.sendMessage(responseMessageText, (error: any) => {
+                        if (error) {
+                            console.error('RabbitMQ bağlantı veya gönderme hatası:', error);
+                        } else {
+                            console.log('Response mesajı RabbitMQ\'ya gönderildi.');
+                        }
+                    });
                 }else{
-                    throw new Error('Product creation failed');
+                    const responseMessage = {
+                        result:"Product stock check failed"
+                     };
+                     const responseMessageText = JSON.stringify(responseMessage);
+ 
+                     this.aggregatorRabbitMQProviderQueue.sendMessage(responseMessageText, (error: any) => {
+                         if (error) {
+                             console.error('RabbitMQ bağlantı veya gönderme hatası:', error);
+                         } else {
+                             console.log('Response mesajı RabbitMQ\'ya gönderildi.');
+                         }
+                        });
                 }
               
             } else {
-                return 'insufficient_stock'; 
+                const responseMessage = {
+                    result:"insufficient_stock"
+                 };
+                 const responseMessageText = JSON.stringify(responseMessage);
+
+                 this.aggregatorRabbitMQProviderQueue.sendMessage(responseMessageText, (error: any) => {
+                     if (error) {
+                         console.error('RabbitMQ bağlantı veya gönderme hatası:', error);
+                     } else {
+                         console.log('Response mesajı RabbitMQ\'ya gönderildi.');
+                     }
+                    });
             }
             
         }
@@ -245,11 +275,50 @@ const product = await this.productAppService.getProductByName(productName);
             if (stockAsNumber > 0) {
                 product.data.stock += stockAsNumber;
                 await this.productAppService.updateProduct(product.data.id,product.data.type,productName,product.data.price,product.data.stock);
-                this.stock.Stock(product.data.id, stockAsNumber, 'increase stok');
-                return "succes";
+                const stok = this.stock.Stock(product.data.id, stockAsNumber, 'increase stok');
+                if((await stok).success){
+                    const responseMessage = {
+                       result:"succes"
+                    };
+                    const responseMessageText = JSON.stringify(responseMessage);
+
+                    this.aggregatorRabbitMQProviderQueue.sendMessage(responseMessageText, (error: any) => {
+                        if (error) {
+                            console.error('RabbitMQ bağlantı veya gönderme hatası:', error);
+                        } else {
+                            console.log('Response mesajı RabbitMQ\'ya gönderildi.');
+                        }
+                    });
+                }else{
+                    const responseMessage = {
+                        result:"Product stock check failed"
+                     };
+                     const responseMessageText = JSON.stringify(responseMessage);
+ 
+                     this.aggregatorRabbitMQProviderQueue.sendMessage(responseMessageText, (error: any) => {
+                         if (error) {
+                             console.error('RabbitMQ bağlantı veya gönderme hatası:', error);
+                         } else {
+                             console.log('Response mesajı RabbitMQ\'ya gönderildi.');
+                         }
+                        });
+                }
+              
             } else {
-                return 'insufficient_stock'; 
+                const responseMessage = {
+                    result:"insufficient_stock"
+                 };
+                 const responseMessageText = JSON.stringify(responseMessage);
+
+                 this.aggregatorRabbitMQProviderQueue.sendMessage(responseMessageText, (error: any) => {
+                     if (error) {
+                         console.error('RabbitMQ bağlantı veya gönderme hatası:', error);
+                     } else {
+                         console.log('Response mesajı RabbitMQ\'ya gönderildi.');
+                     }
+                    });
             }
+                
         }
     
     async getNameProduct(productAppService: ProductApplicationService, messageData: any, rabbitmqService: RabbitMQProvider) {
@@ -271,7 +340,7 @@ const product = await this.productAppService.getProductByName(productName);
             }
         });
     }
-    async rollbackStock(messageData: any) {
+    async rollback(messageData: any) {
         const itemsArray: string[] = JSON.parse(JSON.stringify(messageData.items));
                   const productName: string = itemsArray[0];
                   const stockAsString: string = itemsArray[1];

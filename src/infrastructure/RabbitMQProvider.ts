@@ -99,7 +99,12 @@ export class RabbitMQProvider {
             }
         });
     }
-    
+    public removeListener(eventName: string, listener: (...args: any[]) => void) {
+        if (eventName === 'message') {
+            this.messageHandler = (message: string) => {};
+        }
+    }
+
 
     public sendMessage(message: string, callback: (error: any) => void) {
         if (!this.channel) {

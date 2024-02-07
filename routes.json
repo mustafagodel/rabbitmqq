@@ -19,7 +19,8 @@
         "microservices": [
           {
             "name": "product",
-            "actionMessage": "checkAndincreaseStock"
+            "actionMessage": "checkAndincreaseStock",
+            "sagacontrol" : "true"
           }
         ]
       },
