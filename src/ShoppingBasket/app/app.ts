@@ -1,30 +1,25 @@
-import { Request, Response } from 'express';
-import { ReturnService } from '../domain/Return/ReturnService';
 import { inject, injectable } from 'inversify';
-import express from 'express';
-import { ApiResponse } from '../../infrastructure/ApiResponse';
-import { ReturnApplicationService } from '../appservices/ReturnApplicationService';
+import { ShoppingBasketApplicationService } from '../../ShoppingBasket/appservices/ShoppingBasketApplicationService';
 import { RabbitMQProvider } from '../../infrastructure/RabbitMQProvider';
+import { ShoppingBasket } from '../domain/ShoppingBasket';
 
 @injectable()
-export class ReturnApp {
-
-    private readonly returnAppService: ReturnApplicationService;
+export class ShoppingApp {
 
     constructor(
-        @inject(ReturnService) private returnService: ReturnService,
-        @inject(ReturnApplicationService) private returnApplicationService: ReturnApplicationService,
-        @inject('ReturnRabbitMQProviderQueue') private returnRabbitMQProviderQueue: RabbitMQProvider,
+        @inject(ShoppingBasketApplicationService) private shoppingBasketApplicationService: ShoppingBasketApplicationService,
+        @inject('ShoppingBasketRabbitMQProviderQueue') private shoppingBasketRabbitMQProviderQueue: RabbitMQProvider,
         @inject('AggregatorRabbitMQProviderQueue') private aggregatorRabbitMQProviderQueue: RabbitMQProvider,
-
     ) {
-        this.returnRabbitMQProviderQueue = returnRabbitMQProviderQueue;
-        this.returnAppService = returnApplicationService;
-        this.returnRabbitMQProviderQueue.onMessageReceived((message:string)=>{
-            this.handleMessage(message);
-        })
-    }
 
+ this.shoppingBasketApplicationService = shoppingBasketApplicationService;
+        this.shoppingBasketRabbitMQProviderQueue = shoppingBasketRabbitMQProviderQueue;
+        this.shoppingBasketRabbitMQProviderQueue.onMessageReceived((message:string)=>{
+            this.handleMessage(message);
+        });
+        
+
+    }
     public async handleMessage(message: string) {
         const messageData = JSON.parse(message);
 
@@ -45,15 +40,12 @@ export class ReturnApp {
         return;          
         }
 
-        return await func(this.returnAppService, messageData, this.aggregatorRabbitMQProviderQueue);
+        return await func(this.shoppingBasketApplicationService, messageData, this.aggregatorRabbitMQProviderQueue);
     }
     public functions = {
-        async createReturn(returnAppService: ReturnApplicationService, messageData: any, rabbitmqService: RabbitMQProvider) {
-                const createResult = await returnAppService.createReturn(
-                    messageData.returnReason,
-                    messageData.returnItems
-                );
-
+        async addShoppingBasket(shoppingBasketApplicationService: ShoppingBasketApplicationService, messageData: any, rabbitmqService: RabbitMQProvider) {
+                const createResult =await shoppingBasketApplicationService.createShoppingBasket(messageData.userId,messageData.items);
+     
               
                 const responseMessage = {
                     response: createResult,
@@ -68,16 +60,8 @@ export class ReturnApp {
                     }
                 });
             
-        },
+        }
             
         }
-        
-    };
-
-
-
-  
-
-
-
+};
 

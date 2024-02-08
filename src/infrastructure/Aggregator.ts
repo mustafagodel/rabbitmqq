@@ -7,6 +7,7 @@ import { inject, injectable } from 'inversify';
 import { OrderApp } from '../Order/app/app';
 import { AuthApp } from '../Auth/app/app';
 import { ReturnApp } from '../Return/app/app';
+import { ShoppingApp } from '../ShoppingBasket/app/app';
 import { channel } from 'diagnostics_channel';
 import amqplib,{ ConsumeMessage, connect }  from 'amqplib/callback_api';
 import { MongoDBConnector } from './db';
@@ -22,6 +23,7 @@ export class Aggregator {
     @inject(AuthApp) private authApp: AuthApp,
     @inject(ReturnApp) private returnApp: ReturnApp,  
     @inject(RequestResponseMap) private requestResponseMap: RequestResponseMap,
+    @inject(ShoppingApp) private shoppingApp: ReturnApp,  
 ) {
 
   this.returnApp = returnApp;
@@ -134,18 +136,13 @@ private async handleSaga(route: any, requestData: any,rabbitmqServiceToUse: Rabb
             rabbitmqServiceToUse?.sendMessage(responseMessageText, (error) => {
                 if (error) {
                     console.log('RabbitMQ is connected or Sending error:', error);
-                    connector.rollbackTransaction(session!);
-                    microserviceController['rollback'](requestData);
                 }
                 console.log('The Request was received and Sent to RabbitMQ');
                
             });
    
-              const resultOrder = await this.waitForRabbitMQMessage();
-              if(resultOrder.result=='undefined method'){
-                connector.rollbackTransaction(session!);
-                microserviceController['rollback'](requestData);
-              }
+             
+              
            
        
         } else {
@@ -159,16 +156,42 @@ private async handleSaga(route: any, requestData: any,rabbitmqServiceToUse: Rabb
                 if (session) {
                   try {
                        connector.rollbackTransaction(session);
-
                        microserviceController['rollback'](requestData);
+                        connector.commitTransaction(session);
                   } catch (rollbackError) {
                       console.error('Rollback failed:', rollbackError);
                       throw rollbackError; 
                   }
                 }
+                
             });
+            await connector.commitTransaction(session);
         }
-      }
+        const resultOrder = await this.waitForRabbitMQMessage();
+        if(resultOrder.result){
+   const errorMessage = { error: resultOrder };
+      const responseMessageText = JSON.stringify(errorMessage);
+      this.apiGateWayRabbitMQProviderQueue?.sendMessage(responseMessageText, (error) => {
+          if (error) {
+              console.log('RabbitMQ is connected or Sending error:', error);
+          }
+          console.log('The Request was received and Sent to RabbitMQ');
+          if (session) {
+            try {
+                 connector.rollbackTransaction(session);
+
+                 microserviceController['rollback'](requestData);
+                  connector.commitTransaction(session);
+            } catch (rollbackError) {
+                console.error('Rollback failed:', rollbackError);
+                throw rollbackError; 
+            }
+          }
+      });
+     
+    }
+
+  }
 
       await connector.commitTransaction(session);
       console.log('SagaMiddleware: İşlem tamamlandı.');
@@ -246,6 +269,8 @@ private async waitForRabbitMQMessage(): Promise<any> {
     }
    else if (microserviceName == 'return') {
     return this.returnApp;
+  }else if(microserviceName=='ShoppingBasket'){
+    return this.shoppingApp;
   }
     return null;
   }

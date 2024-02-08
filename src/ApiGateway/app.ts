@@ -3,7 +3,7 @@ import 'reflect-metadata';
 import bodyParser, { json } from 'body-parser';
 import { Container } from 'inversify';
 import configureContainer from '../infrastructure/inversify.config';
-import ExceptionMiddleware from '../middleware/ExecptionMiddleware';
+import Middleware from '../middleware/Middleware';
 import  AuthMiddleware  from '../middleware/AuthMiddleware';
 import { RabbitMQProvider } from '../infrastructure/RabbitMQProvider'; 
 import { RequestResponseMap } from '../infrastructure/RequestResponseMap';  
@@ -21,6 +21,7 @@ configureContainer(container);
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(AuthMiddleware);
+app.use(Middleware);
 container.get<Aggregator>(Aggregator);
 const requestResponseMap = container.get<RequestResponseMap>(RequestResponseMap);
 app.post('/api', (req, res) => {

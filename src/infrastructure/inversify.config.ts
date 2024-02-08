@@ -26,7 +26,12 @@ import { OrderApplicationService } from '../Order/appservices/OrderApplicationSe
 import { OrderApp } from '../Order/app/app';  
 import { Aggregator } from '../infrastructure/Aggregator';  
 import { Stock } from './StockService';  
-import  ExceptionMiddleware  from '../middleware/ExecptionMiddleware';  
+import {ShoppingApp} from '../ShoppingBasket/app/app'
+import {ShoppingBasketApplicationService} from '../ShoppingBasket/appservices/ShoppingBasketApplicationService'
+import {ShoppingBasket} from '../ShoppingBasket/domain/ShoppingBasket'
+import {ShoppingBasketRepository} from '../ShoppingBasket/domain/ShoppingBasketRepository'
+import {ShoppingBasketService} from '../ShoppingBasket/domain/ShoppingBasketService'
+
 
 
 
@@ -41,9 +46,9 @@ container.bind<UserService>(UserService).to(UserService).inRequestScope();
 
 container.bind<AuthApp>(AuthApp).to(AuthApp).inRequestScope();
 
+
 container.bind<Stock>(Stock).to(Stock).inSingletonScope();
 
-container.bind<ExceptionMiddleware>(ExceptionMiddleware).to(ExceptionMiddleware).inSingletonScope();
 
 container.bind<PasswordService>(PasswordService).to(PasswordService).inRequestScope();
 
@@ -85,8 +90,23 @@ container.bind<ReturnApplicationService>(ReturnApplicationService).to(ReturnAppl
 container.bind<ReturnApp>(ReturnApp).to(ReturnApp).inRequestScope();
 
 
+container.bind<ShoppingApp>(ShoppingApp).to(ShoppingApp).inRequestScope();
+
+container.bind<ShoppingBasketApplicationService>(ShoppingBasketApplicationService).to(ShoppingBasketApplicationService).inRequestScope();
+
+container.bind<ShoppingBasket>(ShoppingBasket).to(ShoppingBasket).inRequestScope();
+
+container.bind<ShoppingBasketRepository>(ShoppingBasketRepository).to(ShoppingBasketRepository).inRequestScope();
+
+container.bind<ShoppingBasketService>(ShoppingBasketService).to(ShoppingBasketService).inRequestScope();
+
+
 container.bind<RabbitMQProvider>('UserRabbitMQProviderQueue').toDynamicValue(() => {
   return new RabbitMQProvider('amqp://localhost', 'UserQueue');
+}).inRequestScope();
+
+container.bind<RabbitMQProvider>('ShoppingBasketRabbitMQProviderQueue').toDynamicValue(() => {
+  return new RabbitMQProvider('amqp://localhost', 'BasketQueue');
 }).inRequestScope();
 
 container.bind<RabbitMQProvider>('ProductRabbitMQProviderQueue').toDynamicValue(() => {
