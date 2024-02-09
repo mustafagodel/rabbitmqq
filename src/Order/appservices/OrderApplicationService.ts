@@ -2,12 +2,13 @@ import { injectable } from 'inversify';
 import { OrderService } from '../../Order/domain/Product/OrderService';
 import { ApiResponse } from '../../infrastructure/ApiResponse';
 import { OrderItem } from '../domain/Product/Order';
+import { ObjectId } from 'mongodb';
 
 @injectable()
 export class OrderApplicationService {
     constructor(private orderService: OrderService) {}
 
-    async createOrder(orderId: string, items: OrderItem[], price: number): Promise<ApiResponse<any>> {
+    async createOrder(orderId: ObjectId, items: OrderItem[], price: number): Promise<ApiResponse<any>> {
         const createdOrder = await this.orderService.createOrder(orderId, items, price);
 
         if (createdOrder) {
@@ -17,7 +18,7 @@ export class OrderApplicationService {
         
     }
 
-    async updateOrder(id: string, orderId: string, items: OrderItem[], price: number): Promise<ApiResponse<any>> {
+    async updateOrder(id: ObjectId, orderId: ObjectId, items: OrderItem[], price: number): Promise<ApiResponse<any>> {
         const updatedOrder = await this.orderService.updateOrder(id, orderId, items, price);
 
         if (updatedOrder) {
@@ -27,7 +28,7 @@ export class OrderApplicationService {
         
     }
 
-    async deleteOrder(id: string): Promise<ApiResponse<any>> {
+    async deleteOrder(id: ObjectId): Promise<ApiResponse<any>> {
         const result = await this.orderService.deleteOrder(id);
 
         if (result) {
@@ -37,7 +38,7 @@ export class OrderApplicationService {
         
     }
 
-    async getOrderById(id: string): Promise<ApiResponse<any>> {
+    async getOrderById(id: ObjectId): Promise<ApiResponse<any>> {
         const order = await this.orderService.getOrderById(id);
 
         if (order) {

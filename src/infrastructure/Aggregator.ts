@@ -128,9 +128,9 @@ private async handleSaga(route: any, requestData: any,rabbitmqServiceToUse: Rabb
           console.log(microserviceController);
 
           await microserviceController[actionMessage](requestData);
-          const resultProduct= await this.waitForRabbitMQMessage();
+          const resultRabbitMQMessage= await this.waitForRabbitMQMessage();
        
-          if (resultProduct.result == 'succes') {
+          if (resultRabbitMQMessage.result == 'succes') {
 
             const responseMessageText = JSON.stringify(requestData);
             rabbitmqServiceToUse?.sendMessage(responseMessageText, (error) => {
@@ -141,12 +141,9 @@ private async handleSaga(route: any, requestData: any,rabbitmqServiceToUse: Rabb
                
             });
    
-             
-              
-           
        
         } else {
-            const errorMessage = { error: resultProduct };
+            const errorMessage = { error: resultRabbitMQMessage };
             const responseMessageText = JSON.stringify(errorMessage);
             this.apiGateWayRabbitMQProviderQueue?.sendMessage(responseMessageText, (error) => {
                 if (error) {
@@ -167,9 +164,9 @@ private async handleSaga(route: any, requestData: any,rabbitmqServiceToUse: Rabb
             });
             await connector.commitTransaction(session);
         }
-        const resultOrder = await this.waitForRabbitMQMessage();
-        if(resultOrder.result){
-   const errorMessage = { error: resultOrder };
+        const resultMQ = await this.waitForRabbitMQMessage();
+        if(resultMQ.result){
+   const errorMessage = { error: resultMQ };
       const responseMessageText = JSON.stringify(errorMessage);
       this.apiGateWayRabbitMQProviderQueue?.sendMessage(responseMessageText, (error) => {
           if (error) {

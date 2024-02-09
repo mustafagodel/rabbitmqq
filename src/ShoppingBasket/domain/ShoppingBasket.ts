@@ -8,7 +8,7 @@ export class ShoppingBasket {
 
 
     constructor(
-        public userId: string,
+        public userId: ObjectId,
         public items: ShoppingBasketitems[], 
 
     ) {}

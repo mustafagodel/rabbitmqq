@@ -33,7 +33,7 @@ export class OrderRepository {
         }
     }
 
-    async update(id:string,order: Order):  Promise<{ success: boolean }>{
+    async update(id:ObjectId,order: Order):  Promise<{ success: boolean }>{
 
         try {
             const result = await this.collection!.updateOne({ _id: new ObjectId(id) }, { $set: order });
@@ -49,7 +49,7 @@ export class OrderRepository {
         }
     }
 
-    async delete(id: string):  Promise<{ success: boolean }>{
+    async delete(id: ObjectId):  Promise<{ success: boolean }>{
         try {
             const result = await this.collection!.deleteOne({ _id: new ObjectId(id) });
             if (result.deletedCount && result.deletedCount > 0) {
@@ -64,7 +64,7 @@ export class OrderRepository {
         }
     }
 
-    async findById(id: string): Promise<Order | undefined> {
+    async findById(id: ObjectId): Promise<Order | undefined> {
         if (!this.collection) {
             return undefined;
         }

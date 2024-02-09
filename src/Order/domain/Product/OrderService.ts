@@ -2,6 +2,7 @@
 import { inject, injectable } from 'inversify';
 import { Order, OrderItem } from './Order';
 import { OrderRepository } from './OrderRepository';
+import { ObjectId } from 'mongodb';
 
 @injectable()
 export class OrderService {
@@ -10,7 +11,7 @@ export class OrderService {
     
     }
 
-    async createOrder(orderId: string, items: OrderItem[], price: number): Promise<Order | undefined> {
+    async createOrder(orderId: ObjectId, items: OrderItem[], price: number): Promise<Order | undefined> {
         const order = new Order(orderId, items, price);
         const result = await this.orderRepository.add(order);
 
@@ -22,7 +23,7 @@ export class OrderService {
         return undefined;
     }
 
-    async updateOrder(id: string, orderId: string, items: OrderItem[], price: number): Promise<Order | undefined> {
+    async updateOrder(id: ObjectId, orderId: ObjectId, items: OrderItem[], price: number): Promise<Order | undefined> {
         const order = new Order(orderId, items, price);
         const result = await this.orderRepository.update(id, order);
 
@@ -34,7 +35,7 @@ export class OrderService {
         return undefined;
     }
 
-    async deleteOrder(id: string): Promise<boolean> {
+    async deleteOrder(id: ObjectId): Promise<boolean> {
         const result = await this.orderRepository.delete(id);
 
         if (result) {
@@ -45,7 +46,7 @@ export class OrderService {
         return false;
     }
 
-    async getOrderById(id: string): Promise<Order | undefined> {
+    async getOrderById(id: ObjectId): Promise<Order | undefined> {
         return this.orderRepository.findById(id);
     }
 

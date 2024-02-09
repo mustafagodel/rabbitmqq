@@ -6,7 +6,7 @@ export class Order {
     id: ObjectId | undefined;
 
     constructor(
-        public orderId: string, 
+        public orderId: ObjectId, 
         public items: OrderItem[], 
         public totalPrice: number 
     ) {}
