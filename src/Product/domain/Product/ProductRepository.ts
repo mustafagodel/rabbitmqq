@@ -69,7 +69,7 @@ export class ProductRepository {
                 return undefined;
             }
 
-            const product: Product = new Product(productDoc.type,productDoc.name, productDoc.price, productDoc.stock);
+            const product: Product = new Product(productDoc.type, productDoc.name, productDoc.price, productDoc.stock);
             product.id = productDoc._id;
 
             return product;
@@ -87,7 +87,7 @@ export class ProductRepository {
         try {
             const productsDoc = await this.collection.find({}).toArray();
             const products: Product[] = productsDoc.map((productDoc) => {
-                const product: Product = new Product(productDoc.type,productDoc.name, productDoc.price, productDoc.stock);
+                const product: Product = new Product(productDoc.type, productDoc.name, productDoc.price, productDoc.stock);
                 product.id = productDoc._id;
                 return product;
             });
@@ -102,22 +102,22 @@ export class ProductRepository {
         if (!this.collection) {
             return undefined;
         }
-    
+
         try {
             const productDoc = await this.collection.findOne({ name: name });
-    
+
             if (!productDoc) {
                 return undefined;
             }
-    
+
             const product: Product = new Product(productDoc.type, productDoc.name, productDoc.price, productDoc.stock);
             product.id = productDoc._id;
-    
+
             return product;
         } catch (error) {
             console.error('MongoDB Query error:', error);
             throw error;
         }
     }
-   
+
 }

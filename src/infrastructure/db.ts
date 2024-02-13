@@ -6,15 +6,15 @@ export class MongoDBConnector {
     private db: Db;
     constructor() {
         this.client = new MongoClient('mongodb://localhost:27017', {
-        
+
         });
-        this.db = this.client.db("ProjectDatabase"); 
+        this.db = this.client.db("ProjectDatabase");
     }
 
     async connect() {
         try {
             await this.client.connect();
-            this.db = this.client.db('ProjectDatabase'); 
+            this.db = this.client.db('ProjectDatabase');
             console.log('the MongoDB connection was succesful:');
         } catch (error) {
             console.error('The MongoDB connection was failed:', error);
@@ -22,12 +22,12 @@ export class MongoDBConnector {
         }
     }
 
-    getDb(): Db { 
+    getDb(): Db {
         return this.db;
     }
     async startTransaction(): Promise<ClientSession> {
         const session: ClientSession = this.client.startSession();
-         session.startTransaction();
+        session.startTransaction();
         return session;
     }
 

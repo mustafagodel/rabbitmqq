@@ -38,8 +38,8 @@ export class UserRepository {
 
         if (result.acknowledged) {
             return { success: true };
-        } 
-            console.error('The insertion operation failed: ', result.acknowledged);
-            return { success: false };
         }
+        console.error('The insertion operation failed: ', result.acknowledged);
+        return { success: false };
+    }
 }

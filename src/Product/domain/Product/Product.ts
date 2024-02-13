@@ -5,5 +5,5 @@ import { ObjectId } from 'mongodb';
 export class Product {
     id: ObjectId | undefined;
 
-    constructor(public type:string ,public name: string, public price: number, public stock: number) {}
+    constructor(public type: string, public name: string, public price: number, public stock: number) { }
 }

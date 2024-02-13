@@ -12,7 +12,8 @@ export class RequestResponseMap {
     @inject('AggregatorRabbitMQProviderQueue') aggregatorRabbitMQProviderQueue: RabbitMQProvider,
     @inject('ReturnRabbitMQProviderQueue') returnRabbitMQProviderQueue: RabbitMQProvider,
     @inject('ApiGateWayRabbitMQProviderQueue') apiGateWayRabbitMQProviderQueue: RabbitMQProvider,
-    @inject('ShoppingBasketRabbitMQProviderQueue')  shoppingBasketRabbitMQProviderQueue: RabbitMQProvider
+    @inject('ShoppingBasketRabbitMQProviderQueue') shoppingBasketRabbitMQProviderQueue: RabbitMQProvider,
+    @inject('PaymentRabbitMQProviderQueue') paymentRabbitMQProviderQueue: RabbitMQProvider,
   ) {
     this.requestMap = {
       'login': userRabbitMQProviderQueue,
@@ -22,19 +23,22 @@ export class RequestResponseMap {
       'deleteProduct': productRabbitMQProviderQueue,
       'getAllProduct': productRabbitMQProviderQueue,
       'updateProduct': productRabbitMQProviderQueue,
-      'createOrder':orderRabbitMQProviderQueue,
-      'updateOrder':orderRabbitMQProviderQueue,
-      'deleteOrder':orderRabbitMQProviderQueue,
-      'getOrder':orderRabbitMQProviderQueue,
-      'getAllOrders':orderRabbitMQProviderQueue,
-      'getname':orderRabbitMQProviderQueue,
-      'checkAndDecreaseStock':productRabbitMQProviderQueue,
-      'handleMessageAction':aggregatorRabbitMQProviderQueue,
-      'response':aggregatorRabbitMQProviderQueue,
-      'apiGateWay':apiGateWayRabbitMQProviderQueue,
-      'createReturn':returnRabbitMQProviderQueue,
-      'checkReturn,':returnRabbitMQProviderQueue,
-      'addShoppingBasket':shoppingBasketRabbitMQProviderQueue
+      'createOrder': orderRabbitMQProviderQueue,
+      'updateOrder': orderRabbitMQProviderQueue,
+      'deleteOrder': orderRabbitMQProviderQueue,
+      'getOrder': orderRabbitMQProviderQueue,
+      'getAllOrders': orderRabbitMQProviderQueue,
+      'getname': orderRabbitMQProviderQueue,
+      'checkAndDecreaseStock': productRabbitMQProviderQueue,
+      'handleMessageAction': aggregatorRabbitMQProviderQueue,
+      'response': aggregatorRabbitMQProviderQueue,
+      'apiGateWay': apiGateWayRabbitMQProviderQueue,
+      'createReturn': returnRabbitMQProviderQueue,
+      'checkReturn,': returnRabbitMQProviderQueue,
+      'addShoppingBasket': shoppingBasketRabbitMQProviderQueue,
+      'completeShoppingBasket': shoppingBasketRabbitMQProviderQueue,
+      'processPayment': paymentRabbitMQProviderQueue,
+      'handleMessage' : paymentRabbitMQProviderQueue
     };
   }
 
@@ -44,7 +48,7 @@ export class RequestResponseMap {
   }
 
   requiresCustomerRole(action: string, userRole: string): boolean {
-    const CustomerRequiredActions = ['createOrder', 'updateOrder', 'deleteOrder', 'handleMessageAction','getOrder','getAllOrders','createReturn','checkReturn','addShoppingBasket'];
+    const CustomerRequiredActions = ['createOrder', 'updateOrder', 'deleteOrder', 'handleMessageAction', 'getOrder', 'getAllOrders', 'createReturn', 'checkReturn', 'addShoppingBasket','processPayment','completeShoppingBasket'];
     return CustomerRequiredActions.includes(action) && userRole !== 'customer';
   }
   getRequestService(action: string): RabbitMQProvider | undefined {

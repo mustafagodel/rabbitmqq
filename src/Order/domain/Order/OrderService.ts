@@ -8,7 +8,7 @@ import { ObjectId } from 'mongodb';
 export class OrderService {
     private orders: Order[] = [];
     constructor(@inject(OrderRepository) public orderRepository: OrderRepository) {
-    
+
     }
 
     async createOrder(orderId: ObjectId, items: OrderItem[], price: number): Promise<Order | undefined> {
@@ -16,7 +16,7 @@ export class OrderService {
         const result = await this.orderRepository.add(order);
 
         if (result) {
-           
+
             return order;
         }
 
@@ -28,7 +28,7 @@ export class OrderService {
         const result = await this.orderRepository.update(id, order);
 
         if (result.success) {
-      
+
             return order;
         }
 
@@ -39,7 +39,7 @@ export class OrderService {
         const result = await this.orderRepository.delete(id);
 
         if (result) {
-          
+
             return true;
         }
 

@@ -4,10 +4,10 @@ import bodyParser, { json } from 'body-parser';
 import { Container } from 'inversify';
 import configureContainer from '../infrastructure/inversify.config';
 import Middleware from '../middleware/Middleware';
-import  AuthMiddleware  from '../middleware/AuthMiddleware';
-import { RabbitMQProvider } from '../infrastructure/RabbitMQProvider'; 
-import { RequestResponseMap } from '../infrastructure/RequestResponseMap';  
-
+import AuthMiddleware from '../middleware/AuthMiddleware';
+import { RabbitMQProvider } from '../infrastructure/RabbitMQProvider';
+import { RequestResponseMap } from '../infrastructure/RequestResponseMap';
+import { ProductApp } from '../Product/app/app';
 require('dotenv').config();
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import { Aggregator } from '../infrastructure/Aggregator';
@@ -29,27 +29,27 @@ app.post('/api', (req, res) => {
   const rabbitmqServiceToUse = requestResponseMap.getRequestService('handleMessageAction');
 
   if (!rabbitmqServiceToUse) {
-      return res.status(400).json({ error: 'Invalid action' });
+    return res.status(400).json({ error: 'Invalid action' });
   }
 
   if (!requestResponseMap.requiresToken(requestData.action)) {
-      sendResponseToClient(res, rabbitmqServiceToUse, requestData);
-      return;
+    sendResponseToClient(res, rabbitmqServiceToUse, requestData);
+    return;
   }
 
   const userToken = req.headers.authorization?.split(' ')[1];
 
   if (!userToken || typeof userToken !== 'string') {
-      console.error('Invalid token: Token is missing or not a string.');
-      return res.status(401).json({ error: 'Unauthorized' });
+    console.error('Invalid token: Token is missing or not a string.');
+    return res.status(401).json({ error: 'Unauthorized' });
   }
 
   const roleToken = jwt.verify(userToken, process.env.SECRET_KEY as string) as JwtPayload;
 
   if (!requestResponseMap.requiresCustomerRole(requestData.action, roleToken.role) || roleToken.role === 'admin') {
-      sendResponseToClient(res, rabbitmqServiceToUse, requestData);
+    sendResponseToClient(res, rabbitmqServiceToUse, requestData);
   } else {
-      res.status(401).json({ error: 'Not a valid role' });
+    res.status(401).json({ error: 'Not a valid role' });
   }
 });
 
@@ -62,20 +62,20 @@ const sendResponseToClient = (
 ) => {
 
   const rabbitmqServiceToUselast = requestResponseMap.getRequestService('apiGateWay');
- 
+
   const responseMessageText = JSON.stringify(requestData);
   rabbitmqServiceToUse.sendMessage(responseMessageText, (error) => {
     if (error) {
       console.log('RabbitMQ Sending error:', error);
       res.status(500).json({ error: 'Internal Server Error' });
       return;
-    } 
-        console.log('The Request was received and Sent to RabbitMQ');
+    }
+    console.log('The Request was received and Sent to RabbitMQ');
   });
   rabbitmqServiceToUselast?.onMessageReceived((message) => {
     const responseMessageText = JSON.parse(message);
     res.status(200).json(responseMessageText);
-});
+  });
 
 };
 

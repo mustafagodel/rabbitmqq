@@ -13,8 +13,8 @@ export class RabbitMQProvider {
 
     constructor(rabbitmqServer: string, queueName: string) {
         this.queueName = queueName;
-        this.messageHandler = (message: string) => {};
-  
+        this.messageHandler = (message: string) => { };
+
         this.createConnection(rabbitmqServer);
     }
 
@@ -39,18 +39,18 @@ export class RabbitMQProvider {
                     this.closeChannel();
                     return;
                 }
-            
+
                 this.channel = channel;
                 channel.assertQueue(this.queueName, { durable: false });
-                
-       
-            
+
+
+
                 console.log(`Listening for messages in ${this.queueName}...`);
                 this.startConsumingMessages(channel);
-            
+
                 this.isConnectionCreated = true;
             });
- 
+
         });
     }
 
@@ -73,6 +73,7 @@ export class RabbitMQProvider {
             });
         }
     }
+    
 
     public closeChannel() {
         if (this.channel) {
@@ -101,7 +102,7 @@ export class RabbitMQProvider {
     }
     public removeListener(eventName: string, listener: (...args: any[]) => void) {
         if (eventName === 'message') {
-            this.messageHandler = (message: string) => {};
+            this.messageHandler = (message: string) => { };
         }
     }
 

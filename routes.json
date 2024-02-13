@@ -1,18 +1,27 @@
 {
     "routes": [
       {
-        "action":"createOrder",
+        "action":"completeShoppingBasket",
         "microservices": [
           {
             "name": "product",
             "actionMessage": "checkAndDecreaseStock",
+            "sagacontrol" : "true"
+          },
+          {
+            "name": "payment",
+            "actionMessage": "processPayment",
+            "sagacontrol" : "true"
+          },
+          {
+            "name": "Basket",
+            "actionMessage": "completeShoppingBasket",
             "sagacontrol" : "true"
           }
         ]
       }, 
        {
         "action": "createProduct"
- 
       },
       {
         "action": "addShoppingBasket"

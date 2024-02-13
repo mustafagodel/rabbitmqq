@@ -7,13 +7,13 @@ export class Return {
     returnDate: Date | undefined;
 
 
-    constructor( public items: Returnitems[], returnReason?: string, isDefective?: boolean) {
+    constructor(public items: Returnitems[], returnReason?: string, isDefective?: boolean) {
         this.returnReason = returnReason;
         this.isDefective = isDefective || false;
-        this.returnDate = new Date(); 
+        this.returnDate = new Date();
     }
 
-   
+
 
     setReturnReason(returnReason: string): void {
         this.returnReason = returnReason;
@@ -22,8 +22,8 @@ export class Return {
     setReturnDate(returnDate: Date): void {
         this.returnDate = returnDate;
     }
-    
+
 }
 export class Returnitems {
-    constructor(public productname: string, public quantity: number) {}
+    constructor(public productname: string, public quantity: number) { }
 }

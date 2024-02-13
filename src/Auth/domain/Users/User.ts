@@ -5,7 +5,7 @@ import { injectable } from 'inversify';
 export class User {
     id: string | undefined;
 
-    constructor(public username: string, public password: string,public role: string){
-        
-   }
+    constructor(public username: string, public password: string, public role: string) {
+
+    }
 }

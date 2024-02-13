@@ -23,41 +23,41 @@ export class OrderRepository {
             const result = await this.collection!.insertOne(order);
             if (result.acknowledged) {
                 return { success: true };
-            } 
-                console.error('The insertion operation failed:', result.acknowledged);
-                return { success: false };
-            
+            }
+            console.error('The insertion operation failed:', result.acknowledged);
+            return { success: false };
+
         } catch (error) {
             console.error('MongoDB insertion error:', error);
             return { success: false };
         }
     }
 
-    async update(id:ObjectId,order: Order):  Promise<{ success: boolean }>{
+    async update(id: ObjectId, order: Order): Promise<{ success: boolean }> {
 
         try {
             const result = await this.collection!.updateOne({ _id: new ObjectId(id) }, { $set: order });
             if (result.modifiedCount && result.modifiedCount > 0) {
                 return { success: true };
-            } 
-                console.error('The update process failed:', result);
-                return { success: false };
-            
+            }
+            console.error('The update process failed:', result);
+            return { success: false };
+
         } catch (error) {
             console.error('MongoDB update error:', error);
             return { success: false };
         }
     }
 
-    async delete(id: ObjectId):  Promise<{ success: boolean }>{
+    async delete(id: ObjectId): Promise<{ success: boolean }> {
         try {
             const result = await this.collection!.deleteOne({ _id: new ObjectId(id) });
             if (result.deletedCount && result.deletedCount > 0) {
                 return { success: true };
-            } 
-                console.error('The deletion process failed:', result);
-                return { success: false };
-            
+            }
+            console.error('The deletion process failed:', result);
+            return { success: false };
+
         } catch (error) {
             console.error('MongoDB deletion error:', error);
             return { success: false };

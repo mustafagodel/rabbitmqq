@@ -20,7 +20,7 @@ export class ReturnApp {
     ) {
         this.returnRabbitMQProviderQueue = returnRabbitMQProviderQueue;
         this.returnAppService = returnApplicationService;
-        this.returnRabbitMQProviderQueue.onMessageReceived((message:string)=>{
+        this.returnRabbitMQProviderQueue.onMessageReceived((message: string) => {
             this.handleMessage(message);
         })
     }
@@ -30,53 +30,53 @@ export class ReturnApp {
 
         const func = this.functions[messageData.action];
 
-        if(!func) {
+        if (!func) {
             const responseMessage = {
                 result: 'undefined method',
             };
             const responseMessageText = JSON.stringify(responseMessage);
-           this.aggregatorRabbitMQProviderQueue.sendMessage(responseMessageText, (error: any) => {
-            if (error) {
-                console.error('RabbitMQ connection or sending error:', error);
-            } 
+            this.aggregatorRabbitMQProviderQueue.sendMessage(responseMessageText, (error: any) => {
+                if (error) {
+                    console.error('RabbitMQ connection or sending error:', error);
+                }
                 console.log('Response message has been sent to RabbitMQ.');
-          
-        });
-        return;          
+
+            });
+            return;
         }
 
         return await func(this.returnAppService, messageData, this.aggregatorRabbitMQProviderQueue);
     }
     public functions = {
         async createReturn(returnAppService: ReturnApplicationService, messageData: any, rabbitmqService: RabbitMQProvider) {
-                const createResult = await returnAppService.createReturn(
-                    messageData.returnReason,
-                    messageData.returnItems
-                );
+            const createResult = await returnAppService.createReturn(
+                messageData.returnReason,
+                messageData.returnItems
+            );
 
-              
-                const responseMessage = {
-                    response: createResult,
-                };
-                const responseMessageText = JSON.stringify(responseMessage);
 
-                rabbitmqService.sendMessage(responseMessageText, (error: any) => {
-                    if (error) {
-                        console.error('RabbitMQ connection or sending error:', error);
-                    } else {
-                        console.log('The response message has been sent to RabbitMQ.');
-                    }
-                });
-            
+            const responseMessage = {
+                response: createResult,
+            };
+            const responseMessageText = JSON.stringify(responseMessage);
+
+            rabbitmqService.sendMessage(responseMessageText, (error: any) => {
+                if (error) {
+                    console.error('RabbitMQ connection or sending error:', error);
+                } else {
+                    console.log('The response message has been sent to RabbitMQ.');
+                }
+            });
+
         },
-            
-        }
-        
-    };
+
+    }
+
+};
 
 
 
-  
+
 
 
 
