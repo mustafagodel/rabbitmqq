@@ -9,7 +9,8 @@ export class Order {
         public orderId: ObjectId,
         public items: OrderItem[],
         public totalPrice: number,
-        public Invoicedetail:InvoiceDetail[]
+        public Invoicedetail:InvoiceDetail[],
+        public deliveryAddress:DeliveryAddress[]
     ) { }
 }
 
@@ -18,7 +19,21 @@ export class OrderItem {
 }
 
 
-export class InvoiceDetail { 
-    constructor(public address: string, public phone: string, public email: string,  public paymentMethod: string, public date: Date) { 
+export class InvoiceDetail {
+    public date: Date;
+
+    constructor(
+        public address: string, 
+        public phone: string, 
+        public email: string,  
+        public paymentMethod: string
+    ) {
+        this.date = new Date(); 
     }
+
+}
+export class DeliveryAddress { 
+    constructor(public address: string, public phone: string) { 
+    }
+    
 }

@@ -2,7 +2,7 @@
 
 import { inject, injectable } from 'inversify';
 import { ShoppingBasketRepository } from './ShoppingBasketRepository';
-import { ShoppingBasket, ShoppingBasketitems } from './ShoppingBasket';
+import { DeliveryAddress, ShoppingBasket, ShoppingBasketitems } from './ShoppingBasket';
 import { ObjectId } from 'mongodb';
 import { OrderService } from '../../Order/domain/Order/OrderService';
 import { InvoiceDetail } from 'src/Order/domain/Order/Order';
@@ -14,8 +14,8 @@ export class ShoppingBasketService {
         @inject(OrderService) private orderService: OrderService
     ) { }
 
-    async createShoppingBasket(userId: ObjectId, items: ShoppingBasketitems[],price :number,Invoicedetail: InvoiceDetail[]): Promise<ShoppingBasket | undefined> {
-        const shoppingBasket = new ShoppingBasket(userId, items,price,Invoicedetail);
+    async createShoppingBasket(userId: ObjectId, items: ShoppingBasketitems[],price :number,Invoicedetail: InvoiceDetail[],deliveryAddress:DeliveryAddress[]): Promise<ShoppingBasket | undefined> {
+        const shoppingBasket = new ShoppingBasket(userId, items,price,Invoicedetail,deliveryAddress);
         const result = await this.shoppingBasketRepository.add(shoppingBasket);
         if (result.success) {
             return shoppingBasket;
@@ -27,7 +27,7 @@ export class ShoppingBasketService {
         return this.shoppingBasketRepository.findById(userId);
     }
 
-    async completeShoppingBasket(userId: ObjectId, items: any[], price: number,InvoiceDetail:any[]): Promise<any> {
+    async completeShoppingBasket(userId: ObjectId, items: any[], price: number,InvoiceDetail:InvoiceDetail[],deliveryAddress:DeliveryAddress[]): Promise<any> {
         try {
             const shoppingBasket = await this.getUserShoppingBasket(userId);
             if (!shoppingBasket) {
@@ -35,7 +35,7 @@ export class ShoppingBasketService {
             }
 
 
-            const order = await this.orderService.createOrder(userId, items, price,InvoiceDetail);
+            const order = await this.orderService.createOrder(userId, items, price,InvoiceDetail,deliveryAddress);
             if (!order) {
                 throw new Error('Failed to create order.');
             }

@@ -11,7 +11,8 @@ export class ShoppingBasket {
         public userId: ObjectId,
         public items: ShoppingBasketitems[],
         public totalPrice: number,
-        public Invoicedetail:InvoiceDetail[]
+        public Invoicedetail:InvoiceDetail[],
+        public deliveryAddress:DeliveryAddress[]
     ) { }
 }
 
@@ -20,6 +21,11 @@ export class ShoppingBasketitems {
 }
 export class InvoiceDetail { 
     constructor(public address: string, public phone: string, public email: string,  public paymentMethod: string, public date: Date) { 
+
+    }
+}
+export class DeliveryAddress { 
+    constructor(public address: string, public phone: string) { 
     }
 }
 

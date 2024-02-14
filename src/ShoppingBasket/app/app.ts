@@ -46,7 +46,7 @@ export class ShoppingApp {
 
     public functions = {
         async addShoppingBasket(shoppingBasketApplicationService: ShoppingBasketApplicationService, messageData: any, rabbitmqService: RabbitMQProvider) {
-            const createResult = await shoppingBasketApplicationService.createShoppingBasket(messageData.userId, messageData.items,messageData.price,messageData.invoiceDetails);
+            const createResult = await shoppingBasketApplicationService.createShoppingBasket(messageData.userId, messageData.items,messageData.price,messageData.invoiceDetails,messageData.deliveryaddress);
 
             const responseMessage = {
                 response: createResult,
@@ -63,7 +63,7 @@ export class ShoppingApp {
         },
 
         async completeShoppingBasket(shoppingBasketApplicationService: ShoppingBasketApplicationService, messageData: any, rabbitmqService: RabbitMQProvider) {
-            const createResult = await shoppingBasketApplicationService.completeShoppingBasket(messageData.userId, messageData.items, messageData.price,messageData.invoiceDetails);
+            const createResult = await shoppingBasketApplicationService.completeShoppingBasket(messageData.userId, messageData.items, messageData.price,messageData.invoiceDetails,messageData.deliveryAddress);
 
             const responseMessage = {
                 response: createResult,

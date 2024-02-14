@@ -57,7 +57,8 @@ export class OrderApp {
                 messageData.orderId,
                 messageData.items,
                 messageData.price,
-                messageData.Invoicedetail
+                messageData.Invoicedetail,
+                messageData.deliveryAddress
             );
             const responseMessage = {
                 response: response,
@@ -79,7 +80,8 @@ export class OrderApp {
                 messageData.orderId,
                 messageData.items,
                 messageData.price,
-                messageData.Invoicedetail
+                messageData.Invoicedetail,
+                messageData.deliveryAddress
             );
             const responseMessage = {
                 response: response,

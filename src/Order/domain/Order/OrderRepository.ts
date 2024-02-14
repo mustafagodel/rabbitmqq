@@ -75,7 +75,7 @@ export class OrderRepository {
             if (!orderMassage) {
                 return undefined;
             }
-            const order = new Order(orderMassage.orderId, orderMassage.items, orderMassage.price,orderMassage.InvoiceDetail);
+            const order = new Order(orderMassage.orderId, orderMassage.items, orderMassage.price,orderMassage.InvoiceDetail,orderMassage.deliveryAddress);
             order.id = orderMassage._id;
 
             return order;
@@ -93,13 +93,13 @@ export class OrderRepository {
         try {
             const orderMassage = await this.collection.find({}).toArray();
             const order: Order[] = orderMassage.map((orderMassage) => {
-                const order = new Order(orderMassage.orderId, orderMassage.items, orderMassage.price,orderMassage.InvoiceDetail);
+                const order = new Order(orderMassage.orderId, orderMassage.items, orderMassage.price,orderMassage.InvoiceDetail,orderMassage.deliveryAddress);
                 order.id = orderMassage._id;
                 return order;
             });
 
             return order;
-        } catch (error) {
+        } catch (error) { 
             console.error('MongoDB Query error:', error);
             throw error;
         }

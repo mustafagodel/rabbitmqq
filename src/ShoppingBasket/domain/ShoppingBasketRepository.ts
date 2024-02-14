@@ -52,9 +52,9 @@ export class ShoppingBasketRepository {
                 return undefined;
             }
 
-            const basket = new ShoppingBasket(shoppingBasketMessage.userId, shoppingBasketMessage.items,shoppingBasketMessage.totalPrice,shoppingBasketMessage.Invoicedetail);
+            const basket = new ShoppingBasket(shoppingBasketMessage.userId, shoppingBasketMessage.items,shoppingBasketMessage.totalPrice,shoppingBasketMessage.Invoicedetail,shoppingBasketMessage.deliveryAddress);
             basket.userId = shoppingBasketMessage.userId;
-
+         
             return basket;
         } catch (error) {
             console.error('MongoDB query error:', error);
