@@ -52,7 +52,7 @@ export class ShoppingBasketRepository {
                 return undefined;
             }
 
-            const basket = new ShoppingBasket(shoppingBasketMessage.userId, shoppingBasketMessage.items);
+            const basket = new ShoppingBasket(shoppingBasketMessage.userId, shoppingBasketMessage.items,shoppingBasketMessage.totalPrice,shoppingBasketMessage.Invoicedetail);
             basket.userId = shoppingBasketMessage.userId;
 
             return basket;

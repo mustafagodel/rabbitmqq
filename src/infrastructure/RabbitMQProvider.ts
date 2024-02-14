@@ -7,8 +7,8 @@ export class RabbitMQProvider {
     private channel: Channel | undefined;
     private queueName: string;
     private isConsuming: boolean = false;
-    private messageHandler: (message: string) => void;
-
+    private messageHandler: (message: string) => void
+  private messageListener: ((message: string) => void) | null = null;
     private isConnectionCreated: boolean = false;
 
     constructor(rabbitmqServer: string, queueName: string) {
@@ -86,19 +86,20 @@ export class RabbitMQProvider {
             });
         }
     }
-    private startConsumingMessages(channel: Channel) {
+    public startConsumingMessages(channel: Channel) {
         channel.consume(this.queueName, (message: Message | null) => {
             if (message) {
                 const content = message.content.toString();
                 console.log(`Received message: ${content}`);
-
+    
+                
                 this.messageHandler(content);
-
+    
+              
                 channel.ack(message);
                 console.log('Acknowledgment sent.');
-                this.startConsumingMessages(channel);
             }
-        });
+        }, { noAck: false }); 
     }
     public removeListener(eventName: string, listener: (...args: any[]) => void) {
         if (eventName === 'message') {
@@ -119,6 +120,7 @@ export class RabbitMQProvider {
 
         callback(null);
     }
+
 
     public clearQueue(callback: (error: any) => void) {
         if (!this.channel) {

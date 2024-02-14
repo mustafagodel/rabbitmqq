@@ -15,7 +15,7 @@
           },
           {
             "name": "Basket",
-            "actionMessage": "completeShoppingBasket",
+            "actionMessage": "completzeShoppingBasket",
             "sagacontrol" : "true"
           }
         ]

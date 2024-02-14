@@ -70,7 +70,7 @@ const configureContainer = (container: Container) => {
 
   container.bind<ProductService>(ProductService).to(ProductService).inRequestScope();
 
-  container.bind<Aggregator>(Aggregator).to(Aggregator).inRequestScope();
+  container.bind<Aggregator>(Aggregator).to(Aggregator).inSingletonScope();
 
 
 

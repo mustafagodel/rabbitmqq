@@ -75,7 +75,7 @@ export class OrderRepository {
             if (!orderMassage) {
                 return undefined;
             }
-            const order = new Order(orderMassage.orderId, orderMassage.items, orderMassage.price);
+            const order = new Order(orderMassage.orderId, orderMassage.items, orderMassage.price,orderMassage.InvoiceDetail);
             order.id = orderMassage._id;
 
             return order;
@@ -93,7 +93,7 @@ export class OrderRepository {
         try {
             const orderMassage = await this.collection.find({}).toArray();
             const order: Order[] = orderMassage.map((orderMassage) => {
-                const order = new Order(orderMassage.orderId, orderMassage.items, orderMassage.price);
+                const order = new Order(orderMassage.orderId, orderMassage.items, orderMassage.price,orderMassage.InvoiceDetail);
                 order.id = orderMassage._id;
                 return order;
             });

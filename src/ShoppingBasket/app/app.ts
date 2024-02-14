@@ -46,7 +46,7 @@ export class ShoppingApp {
 
     public functions = {
         async addShoppingBasket(shoppingBasketApplicationService: ShoppingBasketApplicationService, messageData: any, rabbitmqService: RabbitMQProvider) {
-            const createResult = await shoppingBasketApplicationService.createShoppingBasket(messageData.userId, messageData.items);
+            const createResult = await shoppingBasketApplicationService.createShoppingBasket(messageData.userId, messageData.items,messageData.price,messageData.invoiceDetails);
 
             const responseMessage = {
                 response: createResult,
@@ -63,7 +63,7 @@ export class ShoppingApp {
         },
 
         async completeShoppingBasket(shoppingBasketApplicationService: ShoppingBasketApplicationService, messageData: any, rabbitmqService: RabbitMQProvider) {
-            const createResult = await shoppingBasketApplicationService.completeShoppingBasket(messageData.userId, messageData.items, messageData.price);
+            const createResult = await shoppingBasketApplicationService.completeShoppingBasket(messageData.userId, messageData.items, messageData.price,messageData.invoiceDetails);
 
             const responseMessage = {
                 response: createResult,
@@ -77,6 +77,6 @@ export class ShoppingApp {
                     console.log('The response message has been sent to RabbitMQ.');
                 }
             });
-        }
+        }    
     };
 }

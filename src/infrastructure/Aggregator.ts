@@ -39,28 +39,37 @@ export class Aggregator {
     this.loadRoutes();
 
 
-    this.aggregatorRabbitMQProviderQueue.onMessageReceived((message) => {
-      this.handleMessageAction(message);
+    aggregatorRabbitMQProviderQueue.onMessageReceived((message) => {
+      const requestData = JSON.parse(message);
+      if (requestData.action) {
+        this.handleMessageAction(message);
+      } else {
+        const responseMessageText = JSON.stringify(requestData);
+        this.apiGateWayRabbitMQProviderQueue?.sendMessage(responseMessageText, (error) => {
+          if (error) {
+            console.log('RabbitMQ is connected or Sending error:', error);
+          }
+          console.log('The Request was received and Sent to RabbitMQ');
+
+        });
+
+      }
     });
-
-
   }
 
-  public async handleMessageAction(message: string) {
+  public handleMessageAction(message: string) {
 
     const requestData = JSON.parse(message);
     const action = requestData.action;
     const rabbitmqServiceToUse = this.requestResponseMap.getRequestService(requestData.action);
 
-    await this.handleSaga(requestData, rabbitmqServiceToUse!);
-
-
-
+    this.handleSaga(requestData, rabbitmqServiceToUse!);
 
   }
 
 
-  private async handleSaga(requestData: any, rabbitmqService: RabbitMQProvider) {
+  async handleSaga(requestData: any, rabbitmqService: RabbitMQProvider) {
+
     if (this.processingCompleted) {
       console.log("Processing already completed, exiting early.");
       return;
@@ -85,7 +94,7 @@ export class Aggregator {
     try {
       connector.connect();
       session = await connector.startTransaction();
-      
+
       for (const route of routes) {
         if (!route.microservices || route.microservices.length === 0) {
           const responseMessageText = JSON.stringify(requestData);
@@ -97,8 +106,9 @@ export class Aggregator {
             console.log('The Request was received and Sent to RabbitMQ');
 
           });
-          return;
+          break;
         }
+
 
         for (const microservice of route.microservices) {
           const { name, actionMessage } = microservice;
@@ -112,38 +122,15 @@ export class Aggregator {
           console.log(`Processing action ${actionMessage} for microservice ${name}`);
 
 
+       
           const microserviceRequestData = JSON.stringify({
             ...requestData,
             action: actionMessage,
           });
-          const isSuccess = await new Promise((resolve) => {
-            rabbitmqServiceToUse.sendMessage(microserviceRequestData, (error) => {
-              if (error) {
-                console.error(`Error sending message to ${name}:`, error);
-                resolve(false);
-                return;
-              }
-              this.aggregatorRabbitMQProviderQueue.onMessageReceived((response) => {
-                const responseMessage = JSON.parse(response);
-                if (responseMessage.result == "succes") {
-                  console.log(`Successful response from ${name}`);
-                  resolve(true);
-                } else if (responseMessage.response) {
-                  const responseMessageText = JSON.stringify(responseMessage);
-                  this.apiGateWayRabbitMQProviderQueue?.sendMessage(responseMessageText, (error) => {
-                    if (error) {
-                      console.log('RabbitMQ is connected or Sending error:', error);
-                    }
-                    console.log('The Request was received and Sent to RabbitMQ');
+  
+          const isSuccess = await this.processMicroserviceRequest(microserviceRequestData, rabbitmqServiceToUse, name);
+  
 
-                  });
-                } else {
-                  console.log(`Failed response from ${name}`);
-                  resolve(false);
-                }
-              });
-            });
-          });
 
           if (!isSuccess) {
             const microserviceRequestDataw = JSON.stringify({
@@ -152,6 +139,7 @@ export class Aggregator {
             rabbitmqServiceToUse.sendMessage(microserviceRequestDataw, (error) => {
               if (error) {
                 console.error(`Error sending message to ${name}:`, error);
+                this.RollbackService.saga(requestData);
                 return;
               }
             });
@@ -168,18 +156,14 @@ export class Aggregator {
         await connector.rollbackTransaction(session);
       }
       this.RollbackService.saga(requestData);
+      await this.sendConclusionMessage();
 
     } finally {
       if (session) {
         session.endSession();
-
-        await this.sendConclusionMessage();
-
-        this.processingCompleted = true;
-
       }
+      this.processingCompleted = true;
     }
-
 
   }
   private async sendConclusionMessage() {
@@ -215,6 +199,37 @@ export class Aggregator {
       console.error('Error loading routes:', error);
 
     }
+  }
+  private async processMicroserviceRequest(microserviceRequestData: string, rabbitmqServiceToUse: RabbitMQProvider, name: string) {
+    return new Promise<boolean>((resolve) => {
+      rabbitmqServiceToUse.sendMessage(microserviceRequestData, (error) => {
+        if (error) {
+          console.error(`Error sending message to ${name}:`, error);
+          resolve(false);
+          return;
+        }
+        this.aggregatorRabbitMQProviderQueue.onMessageReceived((response) => {
+          const responseMessage = JSON.parse(response);
+          if (responseMessage.result == "succes") {
+            console.log(`Successful response from ${name}`);
+            resolve(true);
+          } else if (responseMessage.response) {
+            const responseMessageText = JSON.stringify(responseMessage);
+            this.apiGateWayRabbitMQProviderQueue?.sendMessage(responseMessageText, (error) => {
+              if (error) {
+                console.log('RabbitMQ is connected or Sending error:', error);
+              }
+              console.log('The Request was received and Sent to RabbitMQ');
+            });
+          } else if (responseMessage.action) {
+            this.handleMessageAction(response);
+          } else {
+            console.log(`Failed response from ${name}`);
+            resolve(false);
+          }
+        });
+      });
+    });
   }
 }
 

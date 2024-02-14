@@ -56,7 +56,8 @@ export class OrderApp {
             const response = await orderAppService.createOrder(
                 messageData.orderId,
                 messageData.items,
-                messageData.price
+                messageData.price,
+                messageData.Invoicedetail
             );
             const responseMessage = {
                 response: response,
@@ -77,7 +78,8 @@ export class OrderApp {
                 messageData.id,
                 messageData.orderId,
                 messageData.items,
-                messageData.price
+                messageData.price,
+                messageData.Invoicedetail
             );
             const responseMessage = {
                 response: response,
