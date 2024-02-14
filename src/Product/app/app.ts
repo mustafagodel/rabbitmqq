@@ -367,23 +367,5 @@ export class ProductApp {
             }
         });
     }
-    async rollback(messageData: any) {
-        const itemsArray: any[] = messageData.items;
-        for (const item of itemsArray) {
-            const productName: string = item.productName;
-            const quantity: number = item.quantity;
-            const product = await this.productAppService.getProductByName(productName);
-
-            let stockDifference = 0;
-            if (messageData.action == 'createOrder') {
-                stockDifference = product.data.stock + quantity;
-            } else if (messageData.action == 'createReturn') {
-                stockDifference = product.data.stock - quantity;
-            }
-
-            this.productAppService.updateProduct(product.data.id, product.data.type, productName, product.data.price, stockDifference);
-            await this.stock.Stock(product.data.id, quantity, 'rollback stok');
-        }
-    }
-
+   
 }

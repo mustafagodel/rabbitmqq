@@ -37,25 +37,10 @@ export class Aggregator {
     this.requestResponseMap = requestResponseMap;
     this.aggregatorRabbitMQProviderQueue = aggregatorRabbitMQProviderQueue;
     this.loadRoutes();
-    
+
 
     this.aggregatorRabbitMQProviderQueue.onMessageReceived((message) => {
-
-      const requestData = JSON.parse(message);
-      if (requestData.action) {
-        this.handleMessageAction(message);
-      } else {
-
-        const responseMessageText = JSON.stringify(requestData);
-        this.apiGateWayRabbitMQProviderQueue?.sendMessage(responseMessageText, (error) => {
-          if (error) {
-            console.log('RabbitMQ is connected or Sending error:', error);
-          }
-          console.log('The Request was received and Sent to RabbitMQ');
-
-        });
-      }
-
+      this.handleMessageAction(message);
     });
 
 
@@ -64,6 +49,25 @@ export class Aggregator {
   public async handleMessageAction(message: string) {
 
     const requestData = JSON.parse(message);
+    const action = requestData.action;
+    const rabbitmqServiceToUse = this.requestResponseMap.getRequestService(requestData.action);
+
+    await this.handleSaga(requestData, rabbitmqServiceToUse!);
+
+
+
+
+  }
+
+
+  private async handleSaga(requestData: any, rabbitmqService: RabbitMQProvider) {
+    if (this.processingCompleted) {
+      console.log("Processing already completed, exiting early.");
+      return;
+    }
+
+    const connector = new MongoDBConnector();
+    let session: ClientSession | null = null;
     const action = requestData.action;
     const rabbitmqServiceToUse = this.requestResponseMap.getRequestService(requestData.action);
 
@@ -78,102 +82,82 @@ export class Aggregator {
       console.error('Route not found for action:', action);
       return;
     }
-
-    for (const route of routes) {
-      if (!route.microservices || route.microservices.length === 0) {
-        const responseMessageText = JSON.stringify(requestData);
-        console.log('messageText before sending:', responseMessageText);
-        rabbitmqServiceToUse?.sendMessage(responseMessageText, (error) => {
-          if (error) {
-            console.log('RabbitMQ is connected or Sending error:', error);
-          }
-          console.log('The Request was received and Sent to RabbitMQ');
-
-        });
-        return;
-      } else {
-
-        for (const microservice of route.microservices) {
-          const { name, sagacontrol } = microservice;
-          if (sagacontrol) {
-            await this.handleSaga(route, requestData, rabbitmqServiceToUse!);
-          }
-        }
-      }
-    }
-  }
-
-
-  private async handleSaga(route: any, requestData: any, rabbitmqService: RabbitMQProvider) {
-    if (this.processingCompleted) {
-      console.log("Processing already completed, exiting early.");
-      return;
-    }
-
-    const connector = new MongoDBConnector();
-    let session: ClientSession | null = null;
-    const rabbitmqServiceToUsesaga = this.requestResponseMap.getRequestService(requestData.action);
     try {
       connector.connect();
       session = await connector.startTransaction();
+      
+      for (const route of routes) {
+        if (!route.microservices || route.microservices.length === 0) {
+          const responseMessageText = JSON.stringify(requestData);
+          console.log('messageText before sending:', responseMessageText);
+          rabbitmqServiceToUse?.sendMessage(responseMessageText, (error) => {
+            if (error) {
+              console.log('RabbitMQ is connected or Sending error:', error);
+            }
+            console.log('The Request was received and Sent to RabbitMQ');
 
-      for (const microservice of route.microservices) {
-        const { name, actionMessage } = microservice;
-
-        const rabbitmqServiceToUse = this.requestResponseMap.getRequestService(actionMessage);
-
-        if (!rabbitmqServiceToUse) {
-          throw new Error(`RabbitMQ service not found for action: ${actionMessage}`);
+          });
+          return;
         }
 
-        console.log(`Processing action ${actionMessage} for microservice ${name}`);
+        for (const microservice of route.microservices) {
+          const { name, actionMessage } = microservice;
+
+          const rabbitmqServiceToUse = this.requestResponseMap.getRequestService(actionMessage);
+
+          if (!rabbitmqServiceToUse) {
+            throw new Error(`RabbitMQ service not found for action: ${actionMessage}`);
+          }
+
+          console.log(`Processing action ${actionMessage} for microservice ${name}`);
 
 
-        const microserviceRequestData = JSON.stringify({
-          ...requestData,
-          action: actionMessage,
-        });
-        const isSuccess = await new Promise((resolve) => {
-          rabbitmqServiceToUse.sendMessage(microserviceRequestData, (error) => {
-            if (error) {
-              console.error(`Error sending message to ${name}:`, error);
-              resolve(false);
-              return;
-            }
-            this.aggregatorRabbitMQProviderQueue.onMessageReceived((response) => {
-              const responseMessage = JSON.parse(response);
-              if (responseMessage.result == "succes") {
-                console.log(`Successful response from ${name}`);
-                resolve(true);
-              } else if (responseMessage.response) {
-                const responseMessageText = JSON.stringify(responseMessage);
-                this.apiGateWayRabbitMQProviderQueue?.sendMessage(responseMessageText, (error) => {
-                  if (error) {
-                    console.log('RabbitMQ is connected or Sending error:', error);
-                  }
-                  console.log('The Request was received and Sent to RabbitMQ');
-
-                });
-              } else {
-                console.log(`Failed response from ${name}`);
+          const microserviceRequestData = JSON.stringify({
+            ...requestData,
+            action: actionMessage,
+          });
+          const isSuccess = await new Promise((resolve) => {
+            rabbitmqServiceToUse.sendMessage(microserviceRequestData, (error) => {
+              if (error) {
+                console.error(`Error sending message to ${name}:`, error);
                 resolve(false);
+                return;
               }
+              this.aggregatorRabbitMQProviderQueue.onMessageReceived((response) => {
+                const responseMessage = JSON.parse(response);
+                if (responseMessage.result == "succes") {
+                  console.log(`Successful response from ${name}`);
+                  resolve(true);
+                } else if (responseMessage.response) {
+                  const responseMessageText = JSON.stringify(responseMessage);
+                  this.apiGateWayRabbitMQProviderQueue?.sendMessage(responseMessageText, (error) => {
+                    if (error) {
+                      console.log('RabbitMQ is connected or Sending error:', error);
+                    }
+                    console.log('The Request was received and Sent to RabbitMQ');
+
+                  });
+                } else {
+                  console.log(`Failed response from ${name}`);
+                  resolve(false);
+                }
+              });
             });
           });
-        });
 
-        if (!isSuccess) {
-          const microserviceRequestDataw = JSON.stringify({
-            response: 'Process failed for microservice ${name}, rolling back...`'
-          });
-          rabbitmqServiceToUse.sendMessage(microserviceRequestDataw, (error) => {
-            if (error) {
-              console.error(`Error sending message to ${name}:`, error);
-              return;
-            }
-          });
+          if (!isSuccess) {
+            const microserviceRequestDataw = JSON.stringify({
+              response: 'Process failed for microservice ${name}, rolling back...`'
+            });
+            rabbitmqServiceToUse.sendMessage(microserviceRequestDataw, (error) => {
+              if (error) {
+                console.error(`Error sending message to ${name}:`, error);
+                return;
+              }
+            });
+          }
+
         }
-
       }
       await connector.commitTransaction(session);
       console.log('Saga completed successfully');
@@ -184,7 +168,7 @@ export class Aggregator {
         await connector.rollbackTransaction(session);
       }
       this.RollbackService.saga(requestData);
-     
+
     } finally {
       if (session) {
         session.endSession();
@@ -192,9 +176,9 @@ export class Aggregator {
         await this.sendConclusionMessage();
 
         this.processingCompleted = true;
-        
+
+      }
     }
-  }
 
 
   }
@@ -209,7 +193,7 @@ export class Aggregator {
         console.log('RabbitMQ is connected or Sending error:', error);
       }
       console.log('The Request was received and Sent to RabbitMQ');
-  
+
     });
   }
 
