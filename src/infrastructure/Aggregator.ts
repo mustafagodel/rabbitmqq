@@ -20,14 +20,15 @@ export class Aggregator {
   private processingCompleted: boolean = false;
 
   constructor(
+
     @inject('AggregatorRabbitMQProviderQueue') private aggregatorRabbitMQProviderQueue: RabbitMQProvider,
     @inject('ApiGateWayRabbitMQProviderQueue') private apiGateWayRabbitMQProviderQueue: RabbitMQProvider,
     @inject(ProductApp) private productApp: ProductApp,
-    @inject(OrderApp) private orderApp: OrderApp,
     @inject(AuthApp) private authApp: AuthApp,
+    @inject(OrderApp)  orderApp: OrderApp,
     @inject(ReturnApp) private returnApp: ReturnApp,
     @inject(ShoppingApp) private shoppingApp: ReturnApp,
-    @inject(PaymentApp) private PaymentApp: PaymentApp,
+    @inject(PaymentApp) private paymentApp: PaymentApp,
     @inject(RequestResponseMap) private requestResponseMap: RequestResponseMap,
     @inject(RollbackService) private RollbackService: RollbackService,
 
@@ -164,7 +165,7 @@ export class Aggregator {
       }
       this.processingCompleted = true;
     }
-
+    this.processingCompleted = false;
   }
   private async sendConclusionMessage() {
     const conclusionMessage = JSON.stringify({

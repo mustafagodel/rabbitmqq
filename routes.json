@@ -5,18 +5,15 @@
         "microservices": [
           {
             "name": "product",
-            "actionMessage": "checkAndDecreaseStock",
-            "sagacontrol" : "true"
+            "actionMessage": "checkAndDecreaseStock"
           },
           {
             "name": "payment",
-            "actionMessage": "processPayment",
-            "sagacontrol" : "true"
+            "actionMessage": "processPayment"
           },
           {
             "name": "Basket",
-            "actionMessage": "completzeShoppingBasket",
-            "sagacontrol" : "true"
+            "actionMessage": "completeShoppingBasket"
           }
         ]
       }, 

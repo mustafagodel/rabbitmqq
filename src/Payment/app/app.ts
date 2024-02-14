@@ -48,6 +48,25 @@ export class PaymentApp {
 
     public functions = {
       async processPayment(paymentApplicationService: PaymentApplicationService, message: string, rabbitmqService: RabbitMQProvider) {
+        const randomNumber = Math.floor(Math.random() * 5);
+
+
+        if (randomNumber === 0) { 
+            const responseMessage = {
+                error: "insufficient_balance" 
+            };
+            const responseMessageText = JSON.stringify(responseMessage);
+        
+            rabbitmqService.sendMessage(responseMessageText, (error: any) => {
+                if (error) {
+                    console.error('RabbitMQ bağlantı veya gönderme hatası:', error);
+                } else {
+                    console.log('Response mesajı RabbitMQ\'ya gönderildi.');
+                }
+            });
+        }
+    
+
         const responseMessage = {
             result: "succes"
         };
@@ -61,11 +80,9 @@ export class PaymentApp {
             }
         });
 
-
         }
     }
-   
-  
+    
 
     }
 

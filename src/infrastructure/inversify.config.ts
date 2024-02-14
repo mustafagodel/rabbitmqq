@@ -52,7 +52,7 @@ const configureContainer = (container: Container) => {
 
   container.bind<UserService>(UserService).to(UserService).inRequestScope();
 
-  container.bind<AuthApp>(AuthApp).to(AuthApp).inRequestScope();
+
 
 
   container.bind<Stock>(Stock).to(Stock).inSingletonScope();
@@ -121,7 +121,7 @@ const configureContainer = (container: Container) => {
   container.bind<RollbackService>(RollbackService).to(RollbackService).inRequestScope();
   
 
-
+  container.bind<AuthApp>(AuthApp).to(AuthApp).inRequestScope();
 
 
 
