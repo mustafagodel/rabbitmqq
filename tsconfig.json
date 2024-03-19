@@ -24,6 +24,6 @@
     "typeRoots": ["node_modules/@types"],
     "sourceMap": true
   },
-  "include": ["src/*.ts", "src/ApiGateway/app.ts","src/Product/app.ts"], 
-  "exclude": ["node_modules"]
+  "include": ["**/*"], 
+  "exclude": ["node_modules","dist"]
 }

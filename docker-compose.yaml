@@ -1,0 +1,92 @@
+version: '3.8'
+services:
+  mongo:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: ProjectDatabase
+    networks:
+      - my_network
+  aggregator:
+    build:
+      context: /Users/mustafagodel/Desktop/rabbitmqqq/src/Aggregator
+      dockerfile: Dockerfile-aggregator
+    ports:
+      - "${PORT_2}:${PORT_2}"
+    environment:
+      MONGO_URL: ${MONGO_URL}
+      RABBITMQ_URL: ${RABBITMQ_URL} 
+      PORT_2: ${PORT_2}
+    networks:
+      - my_network
+    depends_on:
+      - rabbitmq
+      - mongo
+    links:
+      - rabbitmq
+  
+  auth:
+    build:
+      context: /Users/mustafagodel/Desktop/rabbitmqqq/src/Auth
+      dockerfile: Dockerfile-auth
+    ports:
+      - "${PORT_3}:${PORT_3}"
+    environment:
+      MONGO_URL: ${MONGO_URL}
+      RABBITMQ_URL: ${RABBITMQ_URL} 
+      PORT_2: ${PORT_3}
+      SECRET_KEY: ${SECRET_KEY} 
+    networks:
+      - my_network
+    depends_on:
+      - rabbitmq
+      - mongo
+    links:
+      - rabbitmq
+
+  apigateway:
+    build:
+      context: /Users/mustafagodel/Desktop/rabbitmqqq/src/ApiGateway/
+      dockerfile: Dockerfile-apigateway
+    ports:
+      -  "${PORT}:${PORT}"
+    environment:
+      MONGO_URL: ${MONGO_URL}
+      RABBITMQ_URL: ${RABBITMQ_URL} 
+      SECRET_KEY: ${SECRET_KEY} 
+      PORT: ${PORT}
+    networks:
+      - my_network
+    depends_on:
+      - rabbitmq
+      - mongo
+    links:
+      - rabbitmq
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine 
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - 'rabbitmq_data:/data'
+    environment:
+      RABBITMQ_URL: ${RABBITMQ_URL} 
+    networks:
+      - my_network
+    healthcheck:
+        test: ["CMD", "curl", "-f", "http://localhost:15672"]
+        interval: 30s
+        timeout: 10s
+        retries: 5
+      
+
+volumes:
+  mongo_data:
+  rabbitmq_data:
+
+networks:
+  my_network:
