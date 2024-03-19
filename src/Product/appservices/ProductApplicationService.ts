@@ -1,5 +1,5 @@
 import { injectable } from 'inversify';
-import { ProductService } from '../../Product/domain/Product/ProductService';
+import { ProductService } from '../domain/Product/ProductService';
 import { ApiResponse } from '../../infrastructure/ApiResponse';
 
 @injectable()

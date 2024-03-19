@@ -6,7 +6,6 @@ import { ObjectId } from 'mongodb';
 
 @injectable()
 export class OrderService {
-    private orders: Order[] = [];
     constructor(@inject(OrderRepository) public orderRepository: OrderRepository) {
 
     }

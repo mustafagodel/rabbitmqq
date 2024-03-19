@@ -1,12 +1,12 @@
 import { Collection } from 'mongodb';
 import { inject, injectable } from 'inversify';
 import { User } from './User';
-import { MongoDBConnector } from '../../../infrastructure/db';
+import { MongoDBConnector } from '../../db';
 import { SecurityExtension } from '../../../infrastructure/SecurityExtension';
 
 @injectable()
 export class UserRepository {
-    private collection: Collection | undefined;
+    private collection: Collection<User> | undefined;
     private passwordService: SecurityExtension;
 
     constructor(
@@ -14,23 +14,20 @@ export class UserRepository {
         @inject(SecurityExtension) passwordService: SecurityExtension
     ) {
         databaseConnector.connect();
-        this.collection = databaseConnector.getDb()?.collection('users');
+        this.collection = databaseConnector.getDb()?.collection<User>('users');
         this.passwordService = passwordService;
     }
 
-    async findByUsername(username: string, password: string): Promise<{ success: boolean; user?: any }> {
-        if (!this.collection) {
-            return { success: false };
-        }
+    async findByUsername(username: string, password: string): Promise<User | null> {
 
         const hashedPassword = this.passwordService.hashPassword(password);
-        const userDoc = await this.collection.findOne({ username, password: hashedPassword });
+        const userDoc = await this.collection!.findOne({ username, password: hashedPassword });
 
         if (!userDoc) {
-            return { success: false };
+            return null;
         }
 
-        return { success: true, user: userDoc };
+        return userDoc;
     }
 
     async add(user: User): Promise<{ success: boolean }> {

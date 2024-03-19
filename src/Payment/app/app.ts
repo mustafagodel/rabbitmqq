@@ -1,91 +1,86 @@
 // ShoppingApp.ts
 
 import { inject, injectable } from 'inversify';
-import { ShoppingBasketApplicationService } from '../../ShoppingBasket/appservices/ShoppingBasketApplicationService';
-import { RabbitMQProvider } from '../../infrastructure/RabbitMQProvider';
 import { PaymentApplicationService } from '../appservices/PaymentApplicationService';
+import { RabbitMQHandler } from '../../infrastructure/RabbitMQHandler';
+interface IMessageData {
+    action: string;
 
+    amount: number;
+
+}
 @injectable()
 export class PaymentApp {
 
     constructor(
         @inject(PaymentApplicationService) private paymentApplicationService: PaymentApplicationService,
-        @inject('PaymentRabbitMQProviderQueue') private PaymentRabbitMQProviderQueue: RabbitMQProvider,
-        @inject('AggregatorRabbitMQProviderQueue') private aggregatorRabbitMQProviderQueue: RabbitMQProvider,
+        @inject(RabbitMQHandler) private handlerQueue: RabbitMQHandler
     ) {
 
         this.paymentApplicationService = paymentApplicationService;
-        this.PaymentRabbitMQProviderQueue = PaymentRabbitMQProviderQueue;
-        this.PaymentRabbitMQProviderQueue.onMessageReceived((message: string) => {
-            this.handleMessage(message);
-        });
+        this.handlerQueue = handlerQueue;
+
+
 
     }
+    public async handleMessage() {
+        this.handlerQueue.listenForMessages('PaymentQueue', (response: any) => {
+            this.handleMessageAction(response.content.toString());
+        });
+    }
 
+    private async handleMessageAction(message: string) {
+        const messageData: IMessageData = JSON.parse(message);
 
-    public async handleMessage(message: string) {
-        const messageData = JSON.parse(message);
-
-        const func = this.functions[messageData.action];
+        const func = this.functions[messageData.action as keyof typeof this.functions];
 
         if (!func) {
             const responseMessage = {
                 result: 'undefined method',
             };
             const responseMessageText = JSON.stringify(responseMessage);
-            this.aggregatorRabbitMQProviderQueue.sendMessage(responseMessageText, (error: any) => {
-                if (error) {
-                    console.error('RabbitMQ connection or sending error:', error);
-                }
-                console.log('Response message has been sent to RabbitMQ.');
-            });
+            this.handlerQueue.sendRabbitMQ('AggregatorQueue', responseMessageText);
             return;
         }
 
-         await func(this.paymentApplicationService, messageData, this.aggregatorRabbitMQProviderQueue);
+        await func();
     }
 
 
-    public functions = {
-      async processPayment(paymentApplicationService: PaymentApplicationService, message: string, rabbitmqService: RabbitMQProvider) {
-        const randomNumber = Math.floor(Math.random() * 5);
+
+    private functions = {
+        processPayment: async () => {
+            const randomNumber = Math.random()*5;
 
 
-        if (randomNumber === 0) { 
-            const responseMessage = {
-                error: "insufficient_balance" 
-            };
-            const responseMessageText = JSON.stringify(responseMessage);
-        
-            rabbitmqService.sendMessage(responseMessageText, (error: any) => {
-                if (error) {
-                    console.error('RabbitMQ bağlantı veya gönderme hatası:', error);
-                } else {
-                    console.log('Response mesajı RabbitMQ\'ya gönderildi.');
-                }
-            });
-        }
-    
+            if (randomNumber === 0) {
+                const responseMessage = {
+                    error: "insufficient_balance"
+                };
+                const responseMessageText = JSON.stringify(responseMessage);
 
-        const responseMessage = {
-            result: "succes"
-        };
-        const responseMessageText = JSON.stringify(responseMessage);
-
-        rabbitmqService.sendMessage(responseMessageText, (error: any) => {
-            if (error) {
-                console.error('RabbitMQ bağlantı veya gönderme hatası:', error);
+                this.handlerQueue.sendRabbitMQ('ResponseQueue', responseMessageText);
             } else {
-                console.log('Response mesajı RabbitMQ\'ya gönderildi.');
-            }
-        });
 
+
+
+
+                const responseMessage = {
+                    result: "succes"
+                };
+                const responseMessageText = JSON.stringify(responseMessage);
+
+                this.handlerQueue.sendRabbitMQ('ResponseQueue', responseMessageText);
+
+            }
         }
     }
-    
+}
 
-    }
 
-    
-  
+
+
+
+
+
 

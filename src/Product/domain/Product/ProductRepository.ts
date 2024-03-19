@@ -1,7 +1,7 @@
 import { Collection, ObjectId } from 'mongodb';
 import { inject, injectable } from 'inversify';
 import { Product } from './Product';
-import { MongoDBConnector } from '../../../infrastructure/db';
+import { MongoDBConnector } from '../../db';
 
 @injectable()
 export class ProductRepository {

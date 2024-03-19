@@ -1,17 +1,15 @@
-// ShoppingBasketService.ts
 
 import { inject, injectable } from 'inversify';
 import { ShoppingBasketRepository } from './ShoppingBasketRepository';
-import { DeliveryAddress, ShoppingBasket, ShoppingBasketitems } from './ShoppingBasket';
+import { DeliveryAddress, InvoiceDetail, ShoppingBasket, ShoppingBasketitems } from './ShoppingBasket';
 import { ObjectId } from 'mongodb';
-import { OrderService } from '../../Order/domain/Order/OrderService';
-import { InvoiceDetail } from 'src/Order/domain/Order/Order';
+
 
 @injectable()
 export class ShoppingBasketService {
     constructor(
         @inject(ShoppingBasketRepository) private shoppingBasketRepository: ShoppingBasketRepository,
-        @inject(OrderService) private orderService: OrderService
+
     ) { }
 
     async createShoppingBasket(userId: ObjectId, items: ShoppingBasketitems[],price :number,Invoicedetail: InvoiceDetail[],deliveryAddress:DeliveryAddress[]): Promise<ShoppingBasket | undefined> {
@@ -33,18 +31,10 @@ export class ShoppingBasketService {
             if (!shoppingBasket) {
                 throw new Error('Shopping basket not found for the user.');
             }
-
-
-            const order = await this.orderService.createOrder(userId, items, price,InvoiceDetail,deliveryAddress);
-            if (!order) {
-                throw new Error('Failed to create order.');
-            }
-
-
             if (shoppingBasket) {
                 return shoppingBasket;
             }
-
+            
             await this.shoppingBasketRepository.delete(userId);
         } catch (error) {
             console.error('Error completing shopping basket:', error);

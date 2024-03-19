@@ -19,21 +19,15 @@ export class OrderItem {
 }
 
 
-export class InvoiceDetail {
-    public date: Date;
+export class InvoiceDetail { 
+    constructor(public address: string, public phone: string, public email: string,  public paymentMethod: string, public date: Date) { 
 
-    constructor(
-        public address: string, 
-        public phone: string, 
-        public email: string,  
-        public paymentMethod: string
-    ) {
-        this.date = new Date(); 
     }
-
 }
 export class DeliveryAddress { 
     constructor(public address: string, public phone: string) { 
     }
-    
 }
+
+
+

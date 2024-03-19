@@ -1,0 +1,80 @@
+{
+    "routes": [
+      {
+        "action":"completeShoppingBasket",
+        "microservices": [
+          {
+            "name": "product",
+            "actionMessage": "checkAndDecreaseStock"
+          },
+          {
+            "name": "payment",
+            "actionMessage": "processPaylment"
+          },
+          {
+            "name": "Basket",
+            "actionMessage": "completeShoppingBasket"
+          },
+          {
+            "name": "Basket",
+            "actionMessage": "completeShoppingBasket"
+          }
+        ]
+      }, 
+       {
+        "action": "createProduct"
+      },
+      {
+        "action": "addShoppingBasket"
+      },
+      {
+        "action": "createReturn",
+        "microservices": [
+          {
+            "name": "product",
+            "actionMessage": "checkAndincreaseStock",
+            "sagacontrol" : "true"
+          }
+        ]
+      },
+      {
+        "action": "updateProduct"
+    
+      },
+      {
+        "action":"deleteProduct"
+    
+      },
+      {
+        "action": "getProduct"
+       
+      },
+      {
+        "action":"getAllProduct"
+   
+      },
+      {
+        "action": "updateOrder"
+      },
+      {
+        "action":"deleteOrder"
+      },
+      {
+        "action":"getOrder"
+      }, 
+      {
+        "action": "getAllOrders"
+    
+      },
+      {
+        "action": "login"
+      },
+      {
+        "action": "register"
+      },
+      {
+        "action": "checkReturn"
+      }
+    ]
+  }
+  

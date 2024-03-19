@@ -3,14 +3,11 @@
 import { inject, injectable } from 'inversify';
 import { ApiResponse } from '../../infrastructure/ApiResponse';
 import { ObjectId } from 'mongodb';
-import { OrderService } from '../../Order/domain/Order/OrderService';
-import { PaymentRepository } from '../domain/Payment/PaymentRepository';
 import { PaymentService } from '../domain/Payment/PaymentService';
 
 @injectable()
 export class PaymentApplicationService {
     constructor(
-        @inject(OrderService) private orderService: OrderService,
         @inject(PaymentService) private paymentService: PaymentService
     ) { }
 

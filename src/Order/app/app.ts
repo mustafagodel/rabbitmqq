@@ -1,10 +1,26 @@
 import express from 'express';
-import { OrderService } from '../domain/Order/OrderService';
 import { inject, injectable } from 'inversify';
 import { OrderApplicationService } from '../appservices/OrderApplicationService';
 import jwt from 'jsonwebtoken';
-import { RabbitMQProvider } from '../../infrastructure/RabbitMQProvider';
-import { Aggregator } from 'src/infrastructure/Aggregator';
+import { ObjectId } from 'mongodb';
+import { RabbitMQHandler } from '../../infrastructure/RabbitMQHandler';
+interface IMessageData {
+    action: string;
+    orderId: ObjectId;
+    items: { productname: string; quantity: number; ıd: ObjectId }[];
+    totalPrice: number;
+    Invoicedetail: any[];
+    deliveryAddress: any[];
+    [key: string]: any;
+}
+interface IOrderFunctions {
+    createOrder: (orderAppService: OrderApplicationService, messageData: IMessageData) => Promise<void>;
+    updateOrder: (orderAppService: OrderApplicationService, messageData: IMessageData) => Promise<void>;
+    deleteOrder: (orderAppService: OrderApplicationService, messageData: IMessageData) => Promise<void>;
+    getOrder: (orderAppService: OrderApplicationService, messageData: IMessageData) => Promise<void>;
+    getAllOrders: (orderAppService: OrderApplicationService, messageData: IMessageData) => Promise<void>;
+}
+
 
 @injectable()
 export class OrderApp {
@@ -12,49 +28,47 @@ export class OrderApp {
 
 
     constructor(
-        @inject(OrderService) private orderService: OrderService,
-        @inject('OrderRabbitMQProviderQueue') public OrderrabbitMQProvider: RabbitMQProvider,
-        @inject('AggregatorRabbitMQProviderQueue') private aggregatorRabbitMQProviderQueue: RabbitMQProvider,
         @inject(OrderApplicationService) orderAppService: OrderApplicationService,
-       
+        @inject(RabbitMQHandler) private handlerQueue: RabbitMQHandler
+
     ) {
         this.orderAppService = orderAppService;
 
-        this.OrderrabbitMQProvider.onMessageReceived((message: string) => {
-            this.handleMessage(message);
-        });
+        this.handlerQueue = handlerQueue;
 
     }
 
-    public async handleMessage(message: string) {
-        const messageData = JSON.parse(message);
+    public async handleMessage() {
+        this.handlerQueue.listenForMessages('OrderQueue', (response: any) => {
+            this.handleMessageAction(response.content.toString());
+        });
 
-        const func = this.functions[messageData.action];
+
+    }
+    private async handleMessageAction(message: string) {
+        type ActionKeys = keyof IOrderFunctions;
+        const messageData: IMessageData = JSON.parse(message);
+        const action: ActionKeys = messageData.action as ActionKeys;
+
+        const func = this.functions[action];
 
         if (!func) {
             const responseMessage = {
                 result: 'undefined method',
             };
             const responseMessageText = JSON.stringify(responseMessage);
-            this.aggregatorRabbitMQProviderQueue.sendMessage(responseMessageText, (error: any) => {
-                if (error) {
-                    console.error('RabbitMQ connection or sending error:', error);
-                }
-                console.log('Response message has been sent to RabbitMQ.');
-
-            });
+            this.handlerQueue.sendRabbitMQ('ApiGate', responseMessageText);
             return;
         }
 
-        return await func(this.orderAppService, messageData, this.aggregatorRabbitMQProviderQueue);
+        return await func(this.orderAppService, messageData);
     }
 
 
-    public functions = {
-        async createOrder(orderAppService: OrderApplicationService, messageData: any, rabbitmqService: RabbitMQProvider) {
-
+    private functions: IOrderFunctions = {
+        createOrder: async (orderAppService, messageData) => {
             const response = await orderAppService.createOrder(
-                messageData.orderId,
+                messageData.userId,
                 messageData.items,
                 messageData.price,
                 messageData.Invoicedetail,
@@ -63,18 +77,10 @@ export class OrderApp {
             const responseMessage = {
                 response: response,
             };
-            const responseMessageText = JSON.stringify(responseMessage);
-
-            rabbitmqService.sendMessage(responseMessageText, (error: any) => {
-                if (error) {
-                    console.error('RabbitMQ connection or sending error:', error);
-                }
-                console.log('Response message has been sent to RabbitMQ.');
-
-            });
+            this.handlerQueue.sendRabbitMQ('AggregatorQueue', messageData.response);
 
         },
-        async updateOrder(orderAppService: OrderApplicationService, messageData: any, rabbitmqService: RabbitMQProvider) {
+        updateOrder: async (orderAppService, messageData) => {
             const response = await orderAppService.updateOrder(
                 messageData.id,
                 messageData.orderId,
@@ -88,61 +94,37 @@ export class OrderApp {
             };
             const responseMessageText = JSON.stringify(responseMessage);
 
-            rabbitmqService.sendMessage(responseMessageText, (error: any) => {
-                if (error) {
-                    console.error('RabbitMQ connection or sending error:', error);
-                }
-                console.log('Response message has been sent to RabbitMQ.');
+            this.handlerQueue.sendRabbitMQ('AggregatorQueue', responseMessageText);
 
-            });
         },
-
-        async deleteOrder(orderAppService: OrderApplicationService, messageData: any, rabbitmqService: RabbitMQProvider) {
+        deleteOrder: async (orderAppService, messageData) => {
             const response = await orderAppService.deleteOrder(messageData.id);
             const responseMessage = {
                 response: response,
             };
             const responseMessageText = JSON.stringify(responseMessage);
 
-            rabbitmqService.sendMessage(responseMessageText, (error: any) => {
-                if (error) {
-                    console.error('RabbitMQ connection or sending error:', error);
-                }
-                console.log('Response message has been sent to RabbitMQ.');
+            this.handlerQueue.sendRabbitMQ('AggregatorQueue', responseMessageText);
 
-            });
         },
-
-        async getOrder(orderAppService: OrderApplicationService, messageData: any, rabbitmqService: RabbitMQProvider) {
+        getOrder: async (orderAppService, messageData) => {
             const response = await orderAppService.getOrderById(messageData.id);
             const responseMessage = {
                 response: response,
             };
             const responseMessageText = JSON.stringify(responseMessage);
-
-            rabbitmqService.sendMessage(responseMessageText, (error: any) => {
-                if (error) {
-                    console.error('RabbitMQ connection or sending error:', error);
-                }
-                console.log('Response message has been sent to RabbitMQ.');
-
-            });
+            this.handlerQueue.sendRabbitMQ('AggregatorQueue', responseMessageText);
         },
-
-        async getAllOrders(orderAppService: OrderApplicationService, messageData: any, rabbitmqService: RabbitMQProvider) {
+        getAllOrders: async (orderAppService, messageData) => {
             const response = await orderAppService.getAllOrders();
             const responseMessage = {
                 response: response,
             };
             const responseMessageText = JSON.stringify(responseMessage);
 
-            rabbitmqService.sendMessage(responseMessageText, (error: any) => {
-                if (error) {
-                    console.error('RabbitMQ connection or sending error:', error);
-                }
-                console.log('Response message has been sent to RabbitMQ.');
+            this.handlerQueue.sendRabbitMQ('AggregatorQueue', responseMessageText);
+        },
 
-            });
-        }
     };
+
 }

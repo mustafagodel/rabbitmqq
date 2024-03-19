@@ -1,7 +1,7 @@
 // PaymentRepository.ts
 
 import { inject, injectable } from 'inversify';
-import { MongoDBConnector } from '../../../infrastructure/db';
+import { MongoDBConnector } from '../../db';
 import { Collection, ObjectId } from 'mongodb';
 import { Payment } from './Payment';
 

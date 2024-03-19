@@ -1,60 +1,62 @@
 import { Request, Response, Router } from 'express';
-import { ProductService } from '../domain/Product/ProductService';
 import { id, inject, injectable } from 'inversify';
 import express from 'express';
-import { ApiResponse } from '../../infrastructure/ApiResponse';
-import { ProductApplicationService } from '../appservices/ProductApplicationService';
-import { RabbitMQProvider } from '../../infrastructure/RabbitMQProvider';
-import 'reflect-metadata';
-import { OrderItem } from '../../Order/domain/Order/Order';
-import { Stock } from '../../infrastructure/StockService';
 
+import { ProductApplicationService } from '../appservices/ProductApplicationService';
+
+import 'reflect-metadata';
+
+import { RabbitMQHandler } from '../../infrastructure/RabbitMQHandler';
+interface IMessageData {
+    action: string;
+    name: string;
+    type: string;
+    price: number;
+    stock: number;
+    id: string;
+    items: any[]; 
+    productName:string;
+
+}
 @injectable()
 export class ProductApp {
-    private readonly router: Router;
+
     private readonly productAppService: ProductApplicationService;
 
 
     constructor(
-        @inject(ProductService) private productService: ProductService,
-        @inject('ProductRabbitMQProviderQueue') private productrabbitMQProvider: RabbitMQProvider,
         @inject(ProductApplicationService) private productApplicationService: ProductApplicationService,
-        @inject('AggregatorRabbitMQProviderQueue') private aggregatorRabbitMQProviderQueue: RabbitMQProvider,
-        @inject(Stock) private stock: Stock,
-
-
+        @inject(RabbitMQHandler) private handlerQueue: RabbitMQHandler
     ) {
-        this.router = express.Router();
+    
         this.productAppService = productApplicationService;
-        this.productrabbitMQProvider = productrabbitMQProvider;
-        this.stock = stock;
-        this.productrabbitMQProvider.onMessageReceived((message: string) => {
-            this.handleMessage(message);
-        });
+
+   
+    
     }
 
-    public async handleMessage(message: string) {
+
+    public async handleMessage() {
+        this.handlerQueue.listenForMessages('ProductQueue', (response: any) => {
+            this.handleMessageAction(response.content.toString());
+      });
+    }
+    private async handleMessageAction(message: string) {
         try {
             const messageData = JSON.parse(message);
-
-            const func = this.functions[messageData.action];
+            const action = messageData.action as keyof ProductApp['functions'];
+            const func = this.functions[action];
 
             if (!func) {
                 const responseMessage = {
                     result: 'undefined method',
                 };
                 const responseMessageText = JSON.stringify(responseMessage);
-                this.aggregatorRabbitMQProviderQueue.sendMessage(responseMessageText, (error: any) => {
-                    if (error) {
-                        console.error('RabbitMQ connection or sending error:', error);
-                    }
-                    console.log('Response message has been sent to RabbitMQ.');
-
-                });
+                this.handlerQueue.sendRabbitMQ('AggregatorQueue',responseMessageText);
                 return;
             }
 
-            await func(this.productApplicationService, messageData, this.aggregatorRabbitMQProviderQueue, this.stock);
+            await func(this.productApplicationService, messageData);
         } catch (error) {
             console.error('Error handling message:', error);
 
@@ -66,9 +68,9 @@ export class ProductApp {
 
 
 
-    public functions = {
+    private functions = {
 
-        async createProduct(productAppService: ProductApplicationService, messageData: any, rabbitmqService: RabbitMQProvider, stock: Stock) {
+         createProduct:async (productAppService: ProductApplicationService, messageData: IMessageData) => {
             let productId: string | undefined;
             const existingProduct = await productAppService.getProductByName(messageData.name);
 
@@ -86,17 +88,16 @@ export class ProductApp {
                 };
 
                 const responseMessageText = JSON.stringify(responseMessage);
+                this.handlerQueue.sendRabbitMQ('AggregatorQueue',responseMessageText);
 
-                rabbitmqService.sendMessage(responseMessageText, (error: any) => {
-                    if (error) {
-                        console.error('RabbitMQ connection or sending error:', error);
-                    } else {
-                        console.log('The response message has been sent to RabbitMQ.');
-
-                    }
-
-                });
-                stock.Stock(existingProduct.data.id, additionalStock, 'increase stok');
+                const stockMessage = {
+                    productId: existingProduct.data._id,
+                    Stok:  messageData.stock,
+                    operation: 'increase stok'
+                };
+             
+                const stockMessageText = JSON.stringify(stockMessage);
+                this.handlerQueue.sendRabbitMQ('StockQueue', stockMessageText);
 
             } else {
                 const createResult = await productAppService.createProduct(
@@ -112,19 +113,22 @@ export class ProductApp {
 
                 const responseMessageText = JSON.stringify(responseMessage);
 
-                rabbitmqService.sendMessage(responseMessageText, (error: any) => {
-                    if (error) {
-                        console.error('RabbitMQ connection or sending error:', error);
-                    } else {
-                        console.log('The response message has been sent to RabbitMQ.');
-                    }
-                });
-                stock.Stock(createResult.data._id, messageData.stock, 'increase stok');
+                this.handlerQueue.sendRabbitMQ('AggregatorQueue',responseMessageText);
+
+     
+                const stockMessage = {
+                    productId: createResult.data._id,
+                    Stok:  messageData.stock,
+                    operation: 'increase stok'
+                };
+             
+                const stockMessageText = JSON.stringify(stockMessage);
+                this.handlerQueue.sendRabbitMQ('StockQueue', stockMessageText);
             }
 
 
         },
-        async updateProduct(productAppService: ProductApplicationService, messageData: any, rabbitmqService: RabbitMQProvider, stock: Stock) {
+         updateProduct:async(productAppService: ProductApplicationService, messageData: IMessageData)=> {
             const createResult = await productAppService.updateProduct(
                 messageData.id,
                 messageData.type,
@@ -140,15 +144,16 @@ export class ProductApp {
             const responseMessageText = JSON.stringify(responseMessage);
 
 
-            rabbitmqService.sendMessage(responseMessageText, (error: any) => {
-                if (error) {
-                    console.error('RabbitMQ connection or sending error:', error);
-                } else {
-                    console.log('The response message has been sent to RabbitMQ.');
-                }
-            });
-            stock.Stock(createResult.data._id, messageData.stock, 'update stok');
-        }, async deleteProduct(productAppService: ProductApplicationService, messageData: any, rabbitmqService: RabbitMQProvider, stock: Stock) {
+            this.handlerQueue.sendRabbitMQ('AggregatorQueue',responseMessageText);
+            const stockMessage = {
+                productId: createResult.data._id,
+                Stok:  messageData.stock,
+                operation: 'update stok'
+            };
+         
+            const stockMessageText = JSON.stringify(stockMessage);
+            this.handlerQueue.sendRabbitMQ('StockQueue', stockMessageText);
+        },  deleteProduct:async(productAppService: ProductApplicationService, messageData: any)=> {
             const createResult = await productAppService.deleteProduct(
                 messageData.id,
             );
@@ -159,16 +164,16 @@ export class ProductApp {
             };
             const responseMessageText = JSON.stringify(responseMessage);
 
-
-            rabbitmqService.sendMessage(responseMessageText, (error: any) => {
-                if (error) {
-                    console.error('RabbitMQ connection or sending error:', error);
-                } else {
-                    console.log('The response message has been sent to RabbitMQ.');
-                }
-            });
-            stock.Stock(createResult.data._id, messageData.stock, 'decrease stok');
-        }, async getProduct(productAppService: ProductApplicationService, messageData: any, rabbitmqService: RabbitMQProvider) {
+            this.handlerQueue.sendRabbitMQ('AggregatorQueue',responseMessageText);
+            const stockMessage = {
+                productId: createResult.data._id,
+                Stok:  messageData.stock,
+                operation: 'decrease stok'
+            };
+         
+            const stockMessageText = JSON.stringify(stockMessage);
+            this.handlerQueue.sendRabbitMQ('StockQueue', stockMessageText);
+        },  getProduct:async(productAppService: ProductApplicationService, messageData: IMessageData) => {
             const createResult = await productAppService.getProductById(
                 messageData.id,
             );
@@ -179,14 +184,8 @@ export class ProductApp {
             const responseMessageText = JSON.stringify(responseMessage);
 
 
-            rabbitmqService.sendMessage(responseMessageText, (error: any) => {
-                if (error) {
-                    console.error('RabbitMQ bağlantı veya gönderme hatası:', error);
-                } else {
-                    console.log('Response mesajı RabbitMQ\'ya gönderildi.');
-                }
-            });
-        }, async getAllProduct(productAppService: ProductApplicationService, messageData: any, rabbitmqService: RabbitMQProvider) {
+            this.handlerQueue.sendRabbitMQ('AggregatorQueue',responseMessageText);
+        },  getAllProduct:async(productAppService: ProductApplicationService, messageData: IMessageData) => {
             const createResult = await productAppService.getAllProducts();
 
             const responseMessage = {
@@ -196,15 +195,9 @@ export class ProductApp {
             const responseMessageText = JSON.stringify(responseMessage);
 
 
-            rabbitmqService.sendMessage(responseMessageText, (error: any) => {
-                if (error) {
-                    console.error('RabbitMQ bağlantı veya gönderme hatası:', error);
-                } else {
-                    console.log('Response mesajı RabbitMQ\'ya gönderildi.');
-                }
-            });
+            this.handlerQueue.sendRabbitMQ('AggregatorQueue',responseMessageText);
         },
-        async checkAndDecreaseStock(productAppService: ProductApplicationService, messageData: any, rabbitmqService: RabbitMQProvider,stock: Stock) {
+         checkAndDecreaseStock:async(productAppService: ProductApplicationService, messageData: IMessageData) => {
             const itemsArray: any[] = messageData.items;
             let totalPrice = 0;
             let successFlag = false;
@@ -225,9 +218,17 @@ export class ProductApp {
                 if (product.data.stock >= quantity) {
                     product.data.stock -= quantity;
                     productAppService.updateProduct(product.data.id, product.data.type, productName, product.data.price, product.data.stock);
-                    const stok = stock.Stock(product.data.id, quantity, 'decrease stok');
-                    if ((await stok).success) {
-                        totalPrice += quantity * product.data.price;
+                    
+             
+                    const responseMessage = {
+                        productId: product.data.id,
+                        Stok: quantity,
+                        operation: 'decrease stok'
+                    };
+                 
+                    const responseMessageText = JSON.stringify(responseMessage);
+                    this.handlerQueue.sendRabbitMQ('StockQueue', responseMessageText);
+                    if (totalPrice += quantity * product.data.price) {
                         successFlag = true;
                     } else {
                         successFlag = false;
@@ -246,13 +247,7 @@ export class ProductApp {
                 };
                 const responseMessageText = JSON.stringify(responseMessage);
     
-                rabbitmqService.sendMessage(responseMessageText, (error: any) => {
-                    if (error) {
-                        console.error('RabbitMQ bağlantı veya gönderme hatası:', error);
-                    } else {
-                        console.log('Response mesajı RabbitMQ\'ya gönderildi.');
-                    }
-                });
+                this.handlerQueue.sendRabbitMQ('ResponseQueue',responseMessageText);
     
             }
             if (successFlag == false) {
@@ -261,96 +256,80 @@ export class ProductApp {
                     productName: productNameWithInsufficientStock
                 };
                 const responseMessageText = JSON.stringify(responseMessage);
-                rabbitmqService.sendMessage(responseMessageText, (error: any) => {
-                    if (error) {
-                        console.error('RabbitMQ bağlantı veya gönderme hatası:', error);
-                    } else {
-                        console.log('Response mesajı RabbitMQ\'ya gönderildi.');
-                    }
-                });
+                this.handlerQueue.sendRabbitMQ('ResponseQueue',responseMessageText);
             }
     
-        }
-    };
-
-  
-    async checkAndincreaseStock(messageData: any) {
+        },
+         checkAndincreaseStock:async(productAppService: ProductApplicationService, messageData: IMessageData) => {
 
 
-        const itemsArray: any[] = messageData.items;
-        let totalPrice = 0;
-        let successFlag = false;
-        let productNameWithInsufficientReturn: string | null = null;
-        for (const item of itemsArray) {
-            const productName: string = item.productName;
-            const quantity: number = item.quantity;
-            const product = await this.productAppService.getProductByName(productName);
+            const itemsArray: any[] = messageData.items;
+            let totalPrice = 0;
+            let successFlag = false;
+            let productNameWithInsufficientReturn: string | null = null;
+            for (const item of itemsArray) {
+                const productName: string = item.productName;
+                const quantity: number = item.quantity;
+                const product = await productAppService.getProductByName(productName);
+    
+    
+    
+                console.log('Retrieved product:', product);
+    
+                if (product.message == 'Product not found') {
+                    return 'error';
+                }
+    
+                if (product.data.stock >= quantity) {
+                    product.data.stock += quantity;
 
-
-
-            console.log('Retrieved product:', product);
-
-            if (product.message == 'Product not found') {
-                return 'error';
+                    this.productAppService.updateProduct(product.data.id, product.data.type, productName, product.data.price, product.data.stock);
+                    const responseMessage = {
+                        productId: product.data.id,
+                        Stok: quantity,
+                        operation: 'increase stok'
+                    };
+                 
+                    const responseMessageText = JSON.stringify(responseMessage);
+                    this.handlerQueue.sendRabbitMQ('StockQueue', responseMessageText);
+                 
+                    if (totalPrice += quantity * product.data.price) {
+                        totalPrice += quantity * product.data.price;
+                        successFlag = true;
+                    } else {
+                        successFlag = false;
+                    }
+                } else {
+    
+                    if (!productNameWithInsufficientReturn) {
+                        productNameWithInsufficientReturn = productName;
+                        successFlag = false;
+                    }
+                }
             }
-
-            if (product.data.stock >= quantity) {
-                product.data.stock += quantity;
-                this.productAppService.updateProduct(product.data.id, product.data.type, productName, product.data.price, product.data.stock);
-                const stok = this.stock.Stock(product.data.id, quantity, 'increase stok');
-                if ((await stok).success) {
-                    totalPrice += quantity * product.data.price;
-                    successFlag = true;
-                } else {
-                    successFlag = false;
-                }
-            } else {
-
-                if (!productNameWithInsufficientReturn) {
-                    productNameWithInsufficientReturn = productName;
-                    successFlag = false;
-                }
+    
+            if (successFlag) {
+                const responseMessage = {
+                    result: "succes"
+                };
+                const responseMessageText = JSON.stringify(responseMessage);
+    
+                this.handlerQueue.sendRabbitMQ('ResponseQueue',responseMessageText);
             }
-        }
-
-        if (successFlag) {
-            const responseMessage = {
-                result: "succes"
-            };
-            const responseMessageText = JSON.stringify(responseMessage);
-
-            this.aggregatorRabbitMQProviderQueue.sendMessage(responseMessageText, (error: any) => {
-                if (error) {
-                    console.error('RabbitMQ bağlantı veya gönderme hatası:', error);
-                } else {
-                    console.log('Response mesajı RabbitMQ\'ya gönderildi.');
-                }
-            });
-
-        }
-        if (successFlag == false) {
-            const responseMessage = {
-                result: "insufficient_stock",
-                productName: productNameWithInsufficientReturn
-            };
-            const responseMessageText = JSON.stringify(responseMessage);
-            this.aggregatorRabbitMQProviderQueue.sendMessage(responseMessageText, (error: any) => {
-                if (error) {
-                    console.error('RabbitMQ bağlantı veya gönderme hatası:', error);
-                } else {
-                    console.log('Response mesajı RabbitMQ\'ya gönderildi.');
-                }
-            });
-        }
-
-    }
-
-
-
-
-    async getNameProduct(productAppService: ProductApplicationService, messageData: any, rabbitmqService: RabbitMQProvider) {
+            if (successFlag == false) {
+                const responseMessage = {
+                    result: "insufficient_stock",
+                    productName: productNameWithInsufficientReturn
+                };
+                const responseMessageText = JSON.stringify(responseMessage);
+                this.handlerQueue.sendRabbitMQ('ResponseQueue',responseMessageText);
+            }
+    
+        
+    },
+     getNameProduct:async(productAppService: ProductApplicationService, messageData: IMessageData) => {
         const createResult = await productAppService.getProductByName(
-            messageData.name,
+            messageData.productName,
         );
 
         const responseMessage = {
@@ -359,13 +338,14 @@ export class ProductApp {
         };
         const responseMessageText = JSON.stringify(responseMessage);
 
-        rabbitmqService.sendMessage(responseMessageText, (error: any) => {
-            if (error) {
-                console.error('RabbitMQ connection or sending error:', error);
-            } else {
-                console.log('Response message has been sent to RabbitMQ.');
-            }
-        });
+        this.handlerQueue.sendRabbitMQ('RollBack',responseMessageText);
     }
+    
+    };
+
+  
    
+
+
+
 }

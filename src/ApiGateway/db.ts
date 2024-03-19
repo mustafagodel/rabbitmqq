@@ -5,10 +5,9 @@ export class MongoDBConnector {
     private client: MongoClient;
     private db: Db;
     constructor() {
-        this.client = new MongoClient('mongodb://localhost:27017', {
-
-        });
-        this.db = this.client.db("ProjectDatabase");
+        const mongoUrl = process.env.MONGO_URL 
+        this.client = new MongoClient(mongoUrl!);
+        this.db = this.client.db(process.env.MONGO_DB_NAME);
     }
 
     async connect() {

@@ -2,49 +2,59 @@ import { inject, injectable } from 'inversify';
 import { UserService } from '../domain/Users/UserService';
 import jwt from 'jsonwebtoken';
 import { ApiResponse } from '../../infrastructure/ApiResponse';
-import { User } from '../domain/Users/User';
+import { RabbitMQHandler } from '../../infrastructure/RabbitMQHandler';
+
+interface MessageData {
+    action: string;
+    username: string;
+    password: string;
+    role: string;
+}
 
 
+interface BaseRequest {
+    action: string;
+}
+interface LoginRequest extends BaseRequest {
+    username: string;
+    password: string;
+    role: string;
+}
 
-require('dotenv').config();
+interface RegisterRequest extends BaseRequest {
+    username: string;
+    password: string;
+    role: string;
+}
+
 @injectable()
 export class UserApplicationService {
+    [key: string]: any;
 
-    constructor(private userService: UserService) {
+    constructor(
+        @inject(UserService) private userService: UserService
+    ) { }
 
+    private generateToken(role: string): string {
+        const secretKey = process.env.SECRET_KEY || 'defaultSecretKey';
+        return jwt.sign({ role }, secretKey);
     }
 
-    async registerUser(username: string, password: string, role: string): Promise<ApiResponse<any>> {
-        const message = await this.userService.register(username, password, role);
+    public async register(messageData: RegisterRequest): Promise<ApiResponse<boolean>> {
 
-        if (message) {
-            return new ApiResponse(0, 'User added successfully', message);
-        }
-        return new ApiResponse(0, 'No user added', message);
+        const { action, username, password, role } = messageData;
+        const registerResponse = await this.userService.register(username, password, role);
+        const response = new ApiResponse(0, 'User added successfully', registerResponse);
 
+        return response;
     }
 
-    async loginUser(username: string, password: string, role: string): Promise<ApiResponse<{ token: string } | any>> {
-        const message = await this.userService.login(username, password);
+    public async login(request: LoginRequest): Promise<ApiResponse<{ token: string } | null>> {
 
+        const loginResponse = await this.userService.login(request.username, request.password);
+        const response = loginResponse.success ? new ApiResponse(0, 'Login successful', { token: this.generateToken(request.role) }) : new ApiResponse(1, 'Incorrect Username or Password', null);
 
-        if (message) {
-            const secretKey = process.env.SECRET_KEY;
-            const user = message.user;
-            if (!secretKey || typeof secretKey !== 'string') {
-                console.error('SECRET_KEY is missing or invalid.');
-                return new ApiResponse(1, 'Internal Server Error: Invalid SECRET_KEY', 'Invalid secret key');
-            }
-            console.log(role);
-            const token = jwt.sign({ role }, secretKey);
-
-            console.log(`Token after successful login: ${token}`);
-            return new ApiResponse(0, 'Login successful', { token });
-        }
-        return new ApiResponse(1, 'Incorrect Username or Password', false);
-
-
+        return response;
 
     }
 }
-

@@ -2,53 +2,54 @@ import { Request, Response } from 'express';
 import { ReturnService } from '../domain/Return/ReturnService';
 import { inject, injectable } from 'inversify';
 import express from 'express';
-import { ApiResponse } from '../../infrastructure/ApiResponse';
 import { ReturnApplicationService } from '../appservices/ReturnApplicationService';
-import { RabbitMQProvider } from '../../infrastructure/RabbitMQProvider';
-
+import { RabbitMQHandler } from '../../infrastructure/RabbitMQHandler';
+interface IMessageData {
+    action: string;
+    returnReason: string;
+    returnItems: any[];
+}
 @injectable()
 export class ReturnApp {
 
     private readonly returnAppService: ReturnApplicationService;
 
     constructor(
-        @inject(ReturnService) private returnService: ReturnService,
         @inject(ReturnApplicationService) private returnApplicationService: ReturnApplicationService,
-        @inject('ReturnRabbitMQProviderQueue') private returnRabbitMQProviderQueue: RabbitMQProvider,
-        @inject('AggregatorRabbitMQProviderQueue') private aggregatorRabbitMQProviderQueue: RabbitMQProvider,
+        @inject(RabbitMQHandler) private handlerQueue: RabbitMQHandler
 
     ) {
-        this.returnRabbitMQProviderQueue = returnRabbitMQProviderQueue;
+
         this.returnAppService = returnApplicationService;
-        this.returnRabbitMQProviderQueue.onMessageReceived((message: string) => {
-            this.handleMessage(message);
-        })
+        this.handlerQueue=handlerQueue;
+    
+    }
+    public async handleMessage() {
+    
+        this.handlerQueue.listenForMessages('ReturnQueue', (response: any) => {
+            this.handleMessageAction(response.content.toString());
+      });
     }
 
-    public async handleMessage(message: string) {
-        const messageData = JSON.parse(message);
+    private async handleMessageAction(message: string) {
+        const messageData: IMessageData = JSON.parse(message);
+        const action = messageData.action as keyof typeof this.functions;
 
-        const func = this.functions[messageData.action];
+        const func = this.functions[action];
 
         if (!func) {
             const responseMessage = {
                 result: 'undefined method',
             };
             const responseMessageText = JSON.stringify(responseMessage);
-            this.aggregatorRabbitMQProviderQueue.sendMessage(responseMessageText, (error: any) => {
-                if (error) {
-                    console.error('RabbitMQ connection or sending error:', error);
-                }
-                console.log('Response message has been sent to RabbitMQ.');
-
-            });
+            this.handlerQueue.sendRabbitMQ('AggregatorQueue',responseMessageText);
             return;
         }
 
-        return await func(this.returnAppService, messageData, this.aggregatorRabbitMQProviderQueue);
+        return await func(this.returnAppService, messageData);
     }
-    public functions = {
-        async createReturn(returnAppService: ReturnApplicationService, messageData: any, rabbitmqService: RabbitMQProvider) {
+    private functions = {
+         createReturn:async (returnAppService: ReturnApplicationService, messageData: IMessageData) =>{
             const createResult = await returnAppService.createReturn(
                 messageData.returnReason,
                 messageData.returnItems
@@ -60,13 +61,7 @@ export class ReturnApp {
             };
             const responseMessageText = JSON.stringify(responseMessage);
 
-            rabbitmqService.sendMessage(responseMessageText, (error: any) => {
-                if (error) {
-                    console.error('RabbitMQ connection or sending error:', error);
-                } else {
-                    console.log('The response message has been sent to RabbitMQ.');
-                }
-            });
+            this.handlerQueue.sendRabbitMQ('AggregatorQueue',responseMessageText);
 
         },
 

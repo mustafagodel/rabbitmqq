@@ -1,6 +1,6 @@
 import { inject, injectable } from 'inversify';
 import { Return } from './Return';
-import { MongoDBConnector } from '../../../infrastructure/db';
+import { MongoDBConnector } from '../../db';
 import { Collection } from 'mongodb';
 
 @injectable()

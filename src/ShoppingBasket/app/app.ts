@@ -1,82 +1,98 @@
-// ShoppingApp.ts
+
 
 import { inject, injectable } from 'inversify';
-import { ShoppingBasketApplicationService } from '../../ShoppingBasket/appservices/ShoppingBasketApplicationService';
-import { RabbitMQProvider } from '../../infrastructure/RabbitMQProvider';
-import { ShoppingBasket } from '../domain/ShoppingBasket';
+import { ShoppingBasketApplicationService } from '../appservices/ShoppingBasketApplicationService';
+
+import { ObjectId } from 'mongodb';
+import { RabbitMQHandler } from '../../infrastructure/RabbitMQHandler';
+interface IMessageData {
+    action: string;
+    userId: ObjectId;
+    items: any[];
+    price: number;
+    invoiceDetails: any[];
+    deliveryAddress: any[];
+}
 
 @injectable()
 export class ShoppingApp {
 
     constructor(
         @inject(ShoppingBasketApplicationService) private shoppingBasketApplicationService: ShoppingBasketApplicationService,
-        @inject('ShoppingBasketRabbitMQProviderQueue') private shoppingBasketRabbitMQProviderQueue: RabbitMQProvider,
-        @inject('AggregatorRabbitMQProviderQueue') private aggregatorRabbitMQProviderQueue: RabbitMQProvider,
+        @inject(RabbitMQHandler) private handlerQueue: RabbitMQHandler
     ) {
 
+
         this.shoppingBasketApplicationService = shoppingBasketApplicationService;
-        this.shoppingBasketRabbitMQProviderQueue = shoppingBasketRabbitMQProviderQueue;
-        this.shoppingBasketRabbitMQProviderQueue.onMessageReceived((message: string) => {
-            this.handleMessage(message);
+
+        this.handlerQueue = handlerQueue;
+    }
+    public async handleMessage() {
+        this.handlerQueue.listenForMessages('ShoppingQueue', (response: any) => {
+            this.handleMessageAction(response.content.toString());
         });
     }
-    
 
-    public async handleMessage(message: string) {
-        const messageData = JSON.parse(message);
+    private async handleMessageAction(message: string) {
+        const messageData: IMessageData = JSON.parse(message);
+        const action = messageData.action as keyof typeof this.functions;
 
-        const func = this.functions[messageData.action];
+        const func = this.functions[action];
 
         if (!func) {
             const responseMessage = {
                 result: 'undefined method',
             };
             const responseMessageText = JSON.stringify(responseMessage);
-            this.aggregatorRabbitMQProviderQueue.sendMessage(responseMessageText, (error: any) => {
-                if (error) {
-                    console.error('RabbitMQ connection or sending error:', error);
-                }
-                console.log('Response message has been sent to RabbitMQ.');
-            });
+            this.handlerQueue.sendRabbitMQ('AggregatorQueue', responseMessageText);
             return;
         }
 
-        return await func(this.shoppingBasketApplicationService, messageData, this.aggregatorRabbitMQProviderQueue);
+        return await func(this.shoppingBasketApplicationService, messageData);
     }
 
-    public functions = {
-        async addShoppingBasket(shoppingBasketApplicationService: ShoppingBasketApplicationService, messageData: any, rabbitmqService: RabbitMQProvider) {
-            const createResult = await shoppingBasketApplicationService.createShoppingBasket(messageData.userId, messageData.items,messageData.price,messageData.invoiceDetails,messageData.deliveryaddress);
+    private functions = {
+        addShoppingBasket: async (shoppingBasketApplicationService: ShoppingBasketApplicationService, messageData: IMessageData) => {
+            const createResult = await shoppingBasketApplicationService.createShoppingBasket(messageData.userId, messageData.items, messageData.price, messageData.invoiceDetails, messageData.deliveryAddress);
 
             const responseMessage = {
                 response: createResult,
             };
             const responseMessageText = JSON.stringify(responseMessage);
 
-            rabbitmqService.sendMessage(responseMessageText, (error: any) => {
-                if (error) {
-                    console.error('RabbitMQ connection or sending error:', error);
-                } else {
-                    console.log('The response message has been sent to RabbitMQ.');
-                }
-            });
+            this.handlerQueue.sendRabbitMQ('AggregatorQueue', responseMessageText);
         },
 
-        async completeShoppingBasket(shoppingBasketApplicationService: ShoppingBasketApplicationService, messageData: any, rabbitmqService: RabbitMQProvider) {
-            const createResult = await shoppingBasketApplicationService.completeShoppingBasket(messageData.userId, messageData.items, messageData.price,messageData.invoiceDetails,messageData.deliveryAddress);
+        completeShoppingBasket: async (shoppingBasketApplicationService: ShoppingBasketApplicationService, messageData: IMessageData) => {
+            const createResult = await shoppingBasketApplicationService.completeShoppingBasket(messageData.userId, messageData.items, messageData.price, messageData.invoiceDetails, messageData.deliveryAddress);
 
             const responseMessage = {
                 response: createResult,
             };
-            const responseMessageText = JSON.stringify(responseMessage);
+            const responseMessagetext = JSON.stringify(responseMessage);
 
-            rabbitmqService.sendMessage(responseMessageText, (error: any) => {
-                if (error) {
-                    console.error('RabbitMQ connection or sending error:', error);
-                } else {
-                    console.log('The response message has been sent to RabbitMQ.');
-                }
-            });
-        }    
+        
+            if (createResult.message == 'Shopping Basket Successfully Complete ') {
+
+                const stockMessage = {
+                    action: 'createOrder',
+                    userId: messageData.userId,
+                    items: messageData.items,
+                    price: messageData.price,
+                    InvoiceDetail: messageData.invoiceDetails,
+                    deliveryAddress: messageData.deliveryAddress,
+                    completeShoppingBasketid: "completeShoppingBasketid",
+                    response: responseMessagetext
+                };
+
+                const stockMessageText = JSON.stringify(stockMessage);
+                this.handlerQueue.sendRabbitMQ('OrderQueue', stockMessageText);
+
+            }
+
+
+
+
+        }
     };
 }

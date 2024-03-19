@@ -11,7 +11,7 @@ export class UserService {
     }
 
     async login(username: string, password: string): Promise<{ success: boolean; user?: User }> {
-        const result = await this.userRepository.findByUsername(username, password);
+        const user = await this.userRepository.findByUsername(username, password);
         const hashedPassword = this.passwordService.hashPassword(password);
 
         if (result.success) {
@@ -26,17 +26,11 @@ export class UserService {
     }
 
     async register(username: string, password: string, role: string): Promise<boolean> {
-        const existingUserResult = await this.userRepository.findByUsername(username, password);
+        const user = await this.userRepository.findByUsername(username, password);
         const hashedPassword = this.passwordService.hashPassword(password);
-        if (existingUserResult.success) {
-            const existingUser = existingUserResult.user;
+        if (!user) {
 
-            if (existingUser) {
-                const inputPasswordHash = this.passwordService.hashPassword(password);
-                if (inputPasswordHash === existingUser.password) {
-                    return false;
-                }
-            }
+            return false;
         }
 
         const newUser = new User(username, hashedPassword, role);

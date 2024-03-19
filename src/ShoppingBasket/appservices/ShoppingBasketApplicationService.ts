@@ -1,9 +1,8 @@
 import { inject, injectable } from 'inversify';
-import { ShoppingBasketService } from '../../ShoppingBasket/domain/ShoppingBasketService';
+import { ShoppingBasketService } from '../domain/ShoppingBasketService';
 import { ApiResponse } from '../../infrastructure/ApiResponse';
-import { DeliveryAddress, ShoppingBasket, ShoppingBasketitems } from '../../ShoppingBasket/domain/ShoppingBasket';
+import { DeliveryAddress, InvoiceDetail, ShoppingBasket, ShoppingBasketitems } from '../domain/ShoppingBasket';
 import { ObjectId } from 'mongodb';
-import { InvoiceDetail } from 'src/Order/domain/Order/Order';
 
 @injectable()
 export class ShoppingBasketApplicationService {

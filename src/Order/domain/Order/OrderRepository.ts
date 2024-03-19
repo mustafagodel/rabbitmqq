@@ -2,8 +2,8 @@
 import { inject, injectable } from 'inversify';
 import { Order } from './Order';
 import { Collection, ObjectId } from 'mongodb';
-import { MongoDBConnector } from '../../../infrastructure/db';
-import { ProductRepository } from '../../../Product/domain/Product/ProductRepository';
+import { MongoDBConnector } from '../../db';
+
 
 @injectable()
 export class OrderRepository {
@@ -12,7 +12,7 @@ export class OrderRepository {
 
     constructor(
         @inject(MongoDBConnector) private databaseConnector: MongoDBConnector,
-        @inject(ProductRepository) private productRepository: ProductRepository
+   
     ) {
         databaseConnector.connect();
         this.collection = databaseConnector.getDb()?.collection('orders');
