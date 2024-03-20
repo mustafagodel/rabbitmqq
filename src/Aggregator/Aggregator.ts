@@ -1,12 +1,7 @@
 import "reflect-metadata";
 import fs from 'fs';
-import jwt from 'jsonwebtoken';
-
 import { MessageRouter } from '../infrastructure/MessageRouter';
-import express from 'express';
 import { inject, injectable } from 'inversify';
-
-import { ClientSession } from 'mongodb';
 import { RabbitMQHandler } from "../infrastructure/RabbitMQHandler";
 
 

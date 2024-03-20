@@ -1,4 +1,4 @@
-import express from 'express';
+
 import 'reflect-metadata';
 import bodyParser from 'body-parser';
 import { Container } from 'inversify';
@@ -8,6 +8,8 @@ import { MessageRouter } from '../infrastructure/MessageRouter';
 import AuthMiddleware from '../middleware/AuthMiddleware';
 import Middleware from '../middleware/Middleware';
 import jwt, { JwtPayload } from 'jsonwebtoken';
+require('dotenv').config();
+import express from 'express';
 const app = express();
 const port = process.env.PORT || 3000;
 

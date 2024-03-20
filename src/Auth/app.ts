@@ -4,7 +4,6 @@ import configureContainer from './inversify.config';
 require('dotenv').config();
 import express from 'express';
 import bodyParser from 'body-parser';
-import { Connection } from 'amqp-ts';
 import { RabbitMQHandler } from '../infrastructure/RabbitMQHandler';
 import { UserApplicationService } from './appservices/UserApplicationService';
 
@@ -18,7 +17,7 @@ const container = new Container();
 configureContainer(container);
 
 const handlerQueue = container.get<RabbitMQHandler>(RabbitMQHandler);
-const userApplicationService=container.get<UserApplicationService>(UserApplicationService);
+const userApplicationService = container.get<UserApplicationService>(UserApplicationService);
 handlerQueue.listenForMessages('UserQueue', async (response: any) => {
   const messageData: BaseRequest = JSON.parse(response.content.toString());
 
@@ -33,12 +32,7 @@ app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 
 });
-interface MessageData {
-  action: string;
-  username: string;
-  password: string;
-  role: string;
-}
+
 interface BaseRequest {
   action: string;
 }
