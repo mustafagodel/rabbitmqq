@@ -6,6 +6,7 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import { RabbitMQHandler } from '../infrastructure/RabbitMQHandler';
 import { UserApplicationService } from './appservices/UserApplicationService';
+import { BaseRequest } from '../infrastructure/BaseRequset';
 
 
 
@@ -33,17 +34,3 @@ app.listen(port, () => {
 
 });
 
-interface BaseRequest {
-  action: string;
-}
-interface LoginRequest extends BaseRequest {
-  username: string;
-  password: string;
-  role: string;
-}
-
-interface RegisterRequest extends BaseRequest {
-  username: string;
-  password: string;
-  role: string;
-}

@@ -8,6 +8,8 @@ let token;
 export class UserApplicationService {
     [key: string]: any;
 
+    private registeredRole: string | undefined;
+
     constructor(
         @inject(UserService) private userService: UserService
     ) { }
@@ -19,17 +21,22 @@ export class UserApplicationService {
 
     public async register(messageData: RegisterRequest): Promise<ApiResponse<{ result: string; } | null>> {
         const registerResult = await this.userService.register(messageData);
-        const response = registerResult ? new ApiResponse(0, 'User added successfully', { result: 'Successfully Created in The Recording' }) : new ApiResponse(1, 'Failed to add user', { result: 'Check if the value is left blank or You may already be registered' });
-        token = this.generateToken(messageData.role);
-        console.log(token);
-        return response;
+        if (registerResult) {
+            this.registeredRole = messageData.role; 
+            return new ApiResponse(0, 'User added successfully', { result: 'Successfully Created in The Recording' });
+        } else {
+            return new ApiResponse(1, 'Failed to add user', { result: 'Check if the value is left blank or You may already be registered' });
+        }
     }
 
     public async login(request: LoginRequest): Promise<ApiResponse<{ token: string } | null>> {
-
         const loginResponse = await this.userService.login(request);
-        const response = loginResponse ? new ApiResponse(0, 'Login successful', { token: this.generateToken(token!) }) : new ApiResponse(1, 'Incorrect Username or Password', null);
-        return response;
-
+        if (loginResponse) {
+     
+            const token = this.generateToken(this.registeredRole!);
+            return new ApiResponse(0, 'Login successful', { token });
+        } else {
+            return new ApiResponse(1, 'Incorrect Username or Password', null);
+        }
     }
 }

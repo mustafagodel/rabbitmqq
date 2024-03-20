@@ -3,6 +3,7 @@ import { inject, injectable } from 'inversify';
 import { DeliveryAddress, InvoiceDetail, Order, OrderItem } from './Order';
 import { OrderRepository } from './OrderRepository';
 import { ObjectId } from 'mongodb';
+import { IOrderData } from '../../dto/Response/interfaces';
 
 @injectable()
 export class OrderService {
@@ -10,8 +11,8 @@ export class OrderService {
 
     }
 
-    async createOrder(orderId: ObjectId, items: OrderItem[], price: number,Invoicedetail:InvoiceDetail[],deliveryAddress:DeliveryAddress[]): Promise<Order | undefined> {
-        const order = new Order(orderId, items, price,Invoicedetail,deliveryAddress);
+    async createOrder(orderdata:IOrderData): Promise<Order | undefined> {
+        const order = new Order(orderdata.orderId,orderdata.items, orderdata.price,orderdata.Invoicedetail,orderdata.deliveryAddress);
         const result = await this.orderRepository.add(order);
 
         if (result) {
@@ -22,9 +23,9 @@ export class OrderService {
         return undefined;
     }
 
-    async updateOrder(id: ObjectId, orderId: ObjectId, items: OrderItem[], price: number,Invoicedetail:InvoiceDetail[],deliveryAddress:DeliveryAddress[]): Promise<Order | undefined> {
-        const order = new Order(orderId, items, price,Invoicedetail,deliveryAddress);
-        const result = await this.orderRepository.update(id, order);
+    async updateOrder(orderdata: IOrderData): Promise<Order | undefined> {
+        const order = new Order(orderdata.orderId, orderdata.items, orderdata.price,orderdata.Invoicedetail,orderdata.deliveryAddress);
+        const result = await this.orderRepository.update(orderdata.orderId, order);
 
         if (result.success) {
 
@@ -34,8 +35,8 @@ export class OrderService {
         return undefined;
     }
 
-    async deleteOrder(id: ObjectId): Promise<boolean> {
-        const result = await this.orderRepository.delete(id);
+    async deleteOrder(orderdata: IOrderData): Promise<boolean> {
+        const result = await this.orderRepository.delete(orderdata.orderId);
 
         if (result) {
 
@@ -45,8 +46,8 @@ export class OrderService {
         return false;
     }
 
-    async getOrderById(id: ObjectId): Promise<Order | undefined> {
-        return this.orderRepository.findById(id);
+    async getOrderById(orderdata: IOrderData): Promise<Order | undefined> {
+        return this.orderRepository.findById(orderdata.orderId);
     }
 
     async getAllOrders(): Promise<Order[]> {

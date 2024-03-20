@@ -56,19 +56,19 @@ app.post('/api', async (req, res) => {
        return;
     }
   
-    const roleToken = jwt.verify(userToken, process.env.SECRET_KEY as string) as JwtPayload;
-  
-    if (!requestResponseMap.requiresCustomerRole(requestData.action, roleToken.role) || roleToken.role === 'admin') {
+    const decodedToken = jwt.decode(userToken) as { role: string } | null;
+
+    if (!requestResponseMap.requiresCustomerRole(requestData.action, decodedToken!.role) || decodedToken!.role === 'admin') {
         const responseMessageText = JSON.stringify(requestData);
         await handlerQueue.sendRabbitMQ('AggregatorQueue', responseMessageText);
         return;
-    } else {
-  
+    } else if (!requestResponseMap.requiresCustomerRole(requestData.action, decodedToken!.role) || decodedToken!.role === 'admin') {
+   
+   
+    }else{
       res.status(401).json({ error: 'Not a valid role' });
       return;
     }
-  
-  
   });
 
 

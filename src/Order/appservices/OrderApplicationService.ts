@@ -1,15 +1,16 @@
 import { injectable } from 'inversify';
 import { OrderService } from '../domain/Order/OrderService';
 import { ApiResponse } from '../../infrastructure/ApiResponse';
-import { DeliveryAddress, InvoiceDetail, OrderItem } from '../domain/Order/Order';
-import { ObjectId } from 'mongodb';
+import { IOrderData } from '../dto/Response/interfaces';
+
 
 @injectable()
 export class OrderApplicationService {
+    [key: string]: any;
     constructor(private orderService: OrderService) { }
 
-    async createOrder(orderId: ObjectId, items: OrderItem[], price: number,Invoicedetail:InvoiceDetail[],deliveryAddress:DeliveryAddress[]): Promise<ApiResponse<any>> {
-        const createdOrder = await this.orderService.createOrder(orderId, items, price,Invoicedetail,deliveryAddress);
+    async createOrder(orderdata:IOrderData): Promise<ApiResponse<any>> {
+        const createdOrder = await this.orderService.createOrder(orderdata);
 
         if (createdOrder) {
             return new ApiResponse(0, 'Order created successfully', createdOrder);
@@ -18,8 +19,8 @@ export class OrderApplicationService {
 
     }
 
-    async updateOrder(id: ObjectId, orderId: ObjectId, items: OrderItem[], price: number,Invoicedetail:InvoiceDetail[],deliveryAddress:DeliveryAddress[]): Promise<ApiResponse<any>> {
-        const updatedOrder = await this.orderService.updateOrder(id, orderId, items, price,Invoicedetail,deliveryAddress);
+    async updateOrder(orderdata:IOrderData): Promise<ApiResponse<any>> {
+        const updatedOrder = await this.orderService.updateOrder(orderdata);
 
         if (updatedOrder) {
             return new ApiResponse(0, 'Order updated successfully', updatedOrder);
@@ -28,8 +29,8 @@ export class OrderApplicationService {
 
     }
 
-    async deleteOrder(id: ObjectId): Promise<ApiResponse<any>> {
-        const result = await this.orderService.deleteOrder(id);
+    async deleteOrder(orderdata:IOrderData): Promise<ApiResponse<any>> {
+        const result = await this.orderService.deleteOrder(orderdata);
 
         if (result) {
             return new ApiResponse(0, 'Order deleted successfully', true);
@@ -38,8 +39,8 @@ export class OrderApplicationService {
 
     }
 
-    async getOrderById(id: ObjectId): Promise<ApiResponse<any>> {
-        const order = await this.orderService.getOrderById(id);
+    async getOrderById(orderdata:IOrderData): Promise<ApiResponse<any>> {
+        const order = await this.orderService.getOrderById(orderdata);
 
         if (order) {
             return new ApiResponse(0, 'Order retrieved successfully', order);

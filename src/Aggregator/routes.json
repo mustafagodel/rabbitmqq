@@ -62,14 +62,16 @@
     
       },
       {
-        "action": "login",
-        "queuname": "UserQueue"
+        "action": "login"
       },
       {
         "action": "register"
       },
       {
         "action": "checkReturn"
+      },
+      {
+        "action": "createOrder"
       }
     ]
   }
