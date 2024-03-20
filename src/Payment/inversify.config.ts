@@ -2,7 +2,6 @@
 
 import { Container } from 'inversify';
 import { MongoDBConnector } from './db';
-import { PaymentApp } from './app/app'
 import { PaymentApplicationService } from './appservices/PaymentApplicationService'
 import {  Payment } from './domain/Payment/Payment'
 import { PaymentRepository } from './domain/Payment/PaymentRepository'
@@ -12,8 +11,6 @@ import { RabbitMQHandler } from '../infrastructure/RabbitMQHandler';
 
 const configureContainer = (container: Container) => {
   container.bind<MongoDBConnector>(MongoDBConnector).to(MongoDBConnector).inSingletonScope();
-
-  container.bind<PaymentApp>(PaymentApp).to(PaymentApp).inRequestScope();
 
   container.bind<PaymentApplicationService>(PaymentApplicationService).to(PaymentApplicationService).inRequestScope();
   
