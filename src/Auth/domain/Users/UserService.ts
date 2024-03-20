@@ -34,7 +34,7 @@ export class UserService {
             }
             const newUser = new User(request.username, hashedPassword, request.role);
             const addUserResult = await this.userRepository.add(newUser);
-            return addUserResult; 
+            return addUserResult;
         }
     }
 }

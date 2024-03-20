@@ -3,7 +3,7 @@ import { inject, injectable } from 'inversify';
 import { User } from './User';
 import { MongoDBConnector } from '../../db';
 import { SecurityExtension } from '../../../infrastructure/SecurityExtension';
-import { LoginRequest,RegisterRequest } from '../../dto/Response/interfaces';
+import { LoginRequest, RegisterRequest } from '../../dto/Response/interfaces';
 @injectable()
 export class UserRepository {
     private collection: Collection<User> | undefined;
@@ -34,9 +34,9 @@ export class UserRepository {
         const result = await this.collection!.insertOne(user);
 
         if (result.acknowledged) {
-            return  true;
+            return true;
         }
         console.error('The insertion operation failed: ', result.acknowledged);
-        return false ;
+        return false;
     }
 }

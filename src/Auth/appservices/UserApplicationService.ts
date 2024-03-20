@@ -13,11 +13,11 @@ export class UserApplicationService {
     ) { }
 
     private generateToken(role: string): string {
-        const secretKey = process.env.SECRET_KEY || 'defaultSecretKey'; 
+        const secretKey = process.env.SECRET_KEY || 'defaultSecretKey';
         return jwt.sign({ role }, secretKey);
     }
 
-    public async register(messageData: RegisterRequest): Promise<ApiResponse<{ result: string; } | null>> {        
+    public async register(messageData: RegisterRequest): Promise<ApiResponse<{ result: string; } | null>> {
         const registerResult = await this.userService.register(messageData);
         const response = registerResult ? new ApiResponse(0, 'User added successfully', { result: 'Successfully Created in The Recording' }) : new ApiResponse(1, 'Failed to add user', { result: 'Check if the value is left blank or You may already be registered' });
         token = this.generateToken(messageData.role);
